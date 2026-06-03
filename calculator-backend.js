@@ -198,7 +198,8 @@ app.post('/api/stripe/create-portal-session', async (req, res) => {
 
 app.post('/api/stripe/create-checkout-session', async (req, res) => {
   try {
-    const domain = process.env.DOMAIN || process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+    const rawDomain = process.env.DOMAIN || process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+    const domain = /^https?:\/\//i.test(rawDomain) ? rawDomain : `https://${rawDomain}`;
     const priceId = process.env.STRIPE_MONTHLY_PRICE_ID;
 
     if (!process.env.STRIPE_SECRET_KEY) {
