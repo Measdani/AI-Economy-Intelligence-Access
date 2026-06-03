@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/account",
+      "destination": "/calculator-preview.html"
+    },
+    {
+      "source": "/billing",
+      "destination": "/calculator-preview.html"
+    },
+    {
+      "source": "/subscription",
+      "destination": "/calculator-preview.html"
+    },
+    {
+      "source": "/calculator-preview",
+      "destination": "/calculator-preview.html"
+    },
+    {
+      "source": "/enterprise",
+      "destination": "/enterprise.html"
+    },
+    {
+      "source": "/signin",
+      "destination": "/signin.html"
+    },
+    {
+      "source": "/team-test",
+      "destination": "/team-test.html"
+    },
+    {
+      "source": "/",
+      "destination": "/calculator-preview.html"
+    }
+  ]
+}

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Center Import Review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f3f4ef; color: #17221b; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 1180px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+    h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; }
+    table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #dfe7e2; border-radius: 8px; overflow: hidden; }
+    th, td { text-align: left; vertical-align: top; padding: .85rem; border-bottom: 1px solid #e6ece8; font-size: .9rem; }
+    th { background: #eef5ef; color: #33473a; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+    button { border: 0; border-radius: 6px; padding: .55rem .7rem; font-weight: 750; cursor: pointer; margin: 0 .25rem .35rem 0; }
+    .card { background: white; border: 1px solid #dfe7e2; border-radius: 8px; padding: 1rem; margin: 1rem 0; box-shadow: 0 1px 3px rgba(20,38,28,.08); }
+    .badge { display: inline-flex; border-radius: 999px; padding: .25rem .55rem; font-size: .75rem; font-weight: 800; background: #f0f2f1; color: #526157; border: 1px solid #d7dfda; }
+    .notice { display: inline-flex; border-radius: 999px; padding: .3rem .65rem; font-size: .78rem; font-weight: 850; background: #fff7df; color: #8a5a00; border: 1px solid #ead08a; margin-top: .4rem; }
+    .approve { background: #17633a; color: white; }
+    .reject { background: #b42318; color: white; }
+    .edit { background: #ba7517; color: white; }
+    .import { background: #1a472a; color: white; font-size: .95rem; }
+    .muted { color: #637169; }
+    .error { color: #b42318; font-weight: 750; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="muted" style="font-weight:800; letter-spacing:.08em; text-transform:uppercase;">Admin</p>
+    <h1>Data Center Import Review</h1>
+    <p class="muted">Imported rows stay unreviewed until approved. The public calculator reads only from verified_state_data_centers.</p>
+
+    <section class="card">
+      <button class="import" onclick="importLatestData()">Import Latest Data</button>
+      <span id="message" class="muted">Manual import checks the mock Baxtel/Cleanview layer and saves changed rows as unreviewed.</span>
+    </section>
+
+    <div id="app"></div>
+  </main>
+
+  <script>
+    const apiBase = '';
+    const rawKey = 'ai_calc_raw_data_center_imports_fallback';
+    const verifiedKey = 'ai_calc_verified_state_data_centers_fallback';
+    const rawSeed = [
+      { id: 'baxtel-al-sample', state: 'Alabama', abbreviation: 'AL', sourceName: 'Baxtel', sourceUrl: 'https://baxtel.com/data-center/alabama', importedAt: '2026-05-14', rawTotalDataCenters: 40, rawPlannedDataCenters: null, rawUnderConstructionDataCenters: null, rawPipelineDataCenters: null, rawProviderCount: 19, rawLargestFacility: 'Google Bridgeport', rawLargestFacilityMW: 50, rawNotes: 'Baxtel market listing import. Cleanview planned and under-construction fields pending.', status: 'unreviewed' },
+      { id: 'baxtel-ga-sample', state: 'Georgia', abbreviation: 'GA', sourceName: 'Baxtel', sourceUrl: 'https://baxtel.com/data-center/georgia', importedAt: '2026-05-14', rawTotalDataCenters: null, rawPlannedDataCenters: null, rawUnderConstructionDataCenters: null, rawPipelineDataCenters: null, rawProviderCount: null, rawLargestFacility: null, rawLargestFacilityMW: null, rawNotes: 'Mock row created for admin workflow. Values intentionally missing until source import is verified.', status: 'unreviewed' },
+      { id: 'baxtel-tx-sample', state: 'Texas', abbreviation: 'TX', sourceName: 'Baxtel', sourceUrl: 'https://baxtel.com/data-center/texas', importedAt: '2026-05-14', rawTotalDataCenters: null, rawPlannedDataCenters: null, rawUnderConstructionDataCenters: null, rawPipelineDataCenters: null, rawProviderCount: null, rawLargestFacility: null, rawLargestFacilityMW: null, rawNotes: 'Mock row created for admin workflow. Values intentionally missing until source import is verified.', status: 'unreviewed' },
+      { id: 'baxtel-va-sample', state: 'Virginia', abbreviation: 'VA', sourceName: 'Baxtel', sourceUrl: 'https://baxtel.com/data-center/virginia', importedAt: '2026-05-14', rawTotalDataCenters: null, rawPlannedDataCenters: null, rawUnderConstructionDataCenters: null, rawPipelineDataCenters: null, rawProviderCount: null, rawLargestFacility: null, rawLargestFacilityMW: null, rawNotes: 'Mock row created for admin workflow. Values intentionally missing until source import is verified.', status: 'unreviewed' },
+      { id: 'baxtel-az-sample', state: 'Arizona', abbreviation: 'AZ', sourceName: 'Baxtel', sourceUrl: 'https://baxtel.com/data-center/arizona', importedAt: '2026-05-14', rawTotalDataCenters: null, rawPlannedDataCenters: null, rawUnderConstructionDataCenters: null, rawPipelineDataCenters: null, rawProviderCount: null, rawLargestFacility: null, rawLargestFacilityMW: null, rawNotes: 'Mock row created for admin workflow. Values intentionally missing until source import is verified.', status: 'unreviewed' }
+    ];
+    const verifiedSeed = [
+      { state: 'Alabama', abbreviation: 'AL', totalDataCenters: 40, plannedDataCenters: null, underConstructionDataCenters: null, pipelineDataCenters: null, providerCount: 19, largestFacility: 'Google Bridgeport', largestFacilityMW: 50, sourceName: 'Baxtel', sourceUrl: 'https://baxtel.com/data-center/alabama', verifiedAt: '2026-05-14', verifiedBy: 'admin-seed', methodologyNote: 'Baxtel lists the Alabama data center market as having 40 data centers operated by 19 providers.' }
+    ];
+
+    let rows = [];
+    let rawRows = [];
+    let verifiedRows = [];
+    let apiAvailable = true;
+
+    loadReviewRows();
+
+    async function loadReviewRows() {
+      try {
+        const response = await fetch(`${apiBase}/api/admin/data-centers/review`);
+        if (!response.ok) throw new Error('API unavailable');
+        const payload = await response.json();
+        rawRows = payload.rawImports;
+        verifiedRows = payload.verifiedRows;
+        rows = payload.rows;
+        apiAvailable = true;
+      } catch (error) {
+        apiAvailable = false;
+        rawRows = JSON.parse(localStorage.getItem(rawKey) || JSON.stringify(rawSeed));
+        verifiedRows = JSON.parse(localStorage.getItem(verifiedKey) || JSON.stringify(verifiedSeed));
+        rows = rawRows.map((row) => {
+          const currentVerified = verifiedRows.find((verified) => verified.state === row.state) || null;
+          return { ...row, currentVerified, hasUpdate: rawDiffersFromVerified(row, currentVerified) };
+        });
+        setMessage('Backend not running. Showing local preview data only.', true);
+      }
+      render();
+    }
+
+    async function importLatestData() {
+      if (!apiAvailable) {
+        const runId = Date.now();
+        const newRows = rawSeed.map((row, index) => ({ ...row, id: `${row.id}-${runId}-${index}`, importedAt: new Date().toISOString(), status: 'unreviewed' }))
+          .filter((row) => {
+            const currentVerified = verifiedRows.find((verified) => verified.state === row.state);
+            const duplicate = rawRows.find((raw) => raw.state === row.state && raw.status === 'unreviewed' && rawValuesEqual(raw, row));
+            return !duplicate && rawDiffersFromVerified(row, currentVerified);
+          });
+        rawRows = rawRows.concat(newRows);
+        localStorage.setItem(rawKey, JSON.stringify(rawRows));
+        setMessage(`Imported ${newRows.length} local preview rows as unreviewed.`);
+        await loadReviewRows();
+        return;
+      }
+
+      const response = await fetch(`${apiBase}/api/admin/data-centers/import-latest`, { method: 'POST' });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        setMessage(payload.error || 'Import failed', true);
+        return;
+      }
+      setMessage(`Imported ${payload.imported} new unreviewed rows. Skipped ${payload.skipped} unchanged rows.`);
+      await loadReviewRows();
+    }
+
+    async function approve(row, edits = {}) {
+      if (!apiAvailable) {
+        const approvedRaw = { ...row, ...edits };
+        const record = rawToVerified(approvedRaw, 'browser-admin');
+        verifiedRows = verifiedRows.filter((item) => item.state !== record.state).concat(record);
+        rawRows = rawRows.map((item) => item.id === row.id ? { ...approvedRaw, status: 'verified' } : item);
+        localStorage.setItem(rawKey, JSON.stringify(rawRows));
+        localStorage.setItem(verifiedKey, JSON.stringify(verifiedRows));
+        await loadReviewRows();
+        return;
+      }
+
+      const response = await fetch(`${apiBase}/api/admin/data-centers/${encodeURIComponent(row.id)}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verifiedBy: 'admin', edits })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        setMessage(payload.error || 'Approval failed', true);
+        return;
+      }
+      setMessage(`${row.state} approved. Public calculator updated.`);
+      await loadReviewRows();
+    }
+
+    async function reject(row) {
+      if (!apiAvailable) {
+        rawRows = rawRows.map((item) => item.id === row.id ? { ...item, status: 'rejected' } : item);
+        localStorage.setItem(rawKey, JSON.stringify(rawRows));
+        await loadReviewRows();
+        return;
+      }
+
+      const response = await fetch(`${apiBase}/api/admin/data-centers/${encodeURIComponent(row.id)}/reject`, { method: 'POST' });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        setMessage(payload.error || 'Reject failed', true);
+        return;
+      }
+      setMessage(`${row.state} import rejected.`);
+      await loadReviewRows();
+    }
+
+    function editAndApprove(row) {
+      const edits = {
+        rawTotalDataCenters: prompt('Total data centers', row.rawTotalDataCenters ?? ''),
+        rawPlannedDataCenters: prompt('Planned data centers', row.rawPlannedDataCenters ?? ''),
+        rawUnderConstructionDataCenters: prompt('Under construction data centers', row.rawUnderConstructionDataCenters ?? ''),
+        rawPipelineDataCenters: prompt('Pipeline data centers', row.rawPipelineDataCenters ?? ''),
+        rawProviderCount: prompt('Provider count', row.rawProviderCount ?? ''),
+        rawLargestFacility: prompt('Largest facility', row.rawLargestFacility ?? ''),
+        rawLargestFacilityMW: prompt('Largest facility MW', row.rawLargestFacilityMW ?? '')
+      };
+      approve(row, normalizeEdits(edits));
+    }
+
+    function normalizeEdits(edits) {
+      return {
+        rawTotalDataCenters: toNullableNumber(edits.rawTotalDataCenters),
+        rawPlannedDataCenters: toNullableNumber(edits.rawPlannedDataCenters),
+        rawUnderConstructionDataCenters: toNullableNumber(edits.rawUnderConstructionDataCenters),
+        rawPipelineDataCenters: toNullableNumber(edits.rawPipelineDataCenters),
+        rawProviderCount: toNullableNumber(edits.rawProviderCount),
+        rawLargestFacility: edits.rawLargestFacility || null,
+        rawLargestFacilityMW: toNullableNumber(edits.rawLargestFacilityMW)
+      };
+    }
+
+    function render() {
+      document.getElementById('app').innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>Source</th>
+              <th>Imported Values</th>
+              <th>Current Verified</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr>
+                <td>
+                  <strong>${row.state}</strong><br>
+                  <span class="muted">${row.abbreviation}</span>
+                  ${row.hasUpdate ? '<br><span class="notice">New update available for review</span>' : ''}
+                </td>
+                <td><strong>${row.sourceName}</strong><br><a href="${row.sourceUrl}" target="_blank" rel="noreferrer">${row.sourceUrl}</a></td>
+                <td>${valuesBlock(row, 'raw')}</td>
+                <td>${row.currentVerified ? valuesBlock(row.currentVerified, 'verified') : 'No verified value'}</td>
+                <td><span class="badge">${row.status}</span></td>
+                <td>
+                  <button class="approve" onclick="approve(rows.find(r => r.id === '${row.id}'))">Approve</button>
+                  <button class="reject" onclick="reject(rows.find(r => r.id === '${row.id}'))">Reject</button>
+                  <button class="edit" onclick="editAndApprove(rows.find(r => r.id === '${row.id}'))">Edit & Approve</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function valuesBlock(row, type) {
+      if (type === 'raw') {
+        return `
+          Total: ${valueText(row.rawTotalDataCenters)}<br>
+          Planned: ${valueText(row.rawPlannedDataCenters)}<br>
+          Under construction: ${valueText(row.rawUnderConstructionDataCenters)}<br>
+          Pipeline: ${valueText(row.rawPipelineDataCenters)}<br>
+          Providers: ${valueText(row.rawProviderCount)}<br>
+          Largest: ${valueText(row.rawLargestFacility)} ${row.rawLargestFacilityMW ? `(${row.rawLargestFacilityMW} MW)` : ''}
+        `;
+      }
+      return `
+        Total: ${valueText(row.totalDataCenters)}<br>
+        Planned: ${valueText(row.plannedDataCenters)}<br>
+        Under construction: ${valueText(row.underConstructionDataCenters)}<br>
+        Pipeline: ${valueText(row.pipelineDataCenters)}<br>
+        Providers: ${valueText(row.providerCount)}<br>
+        Largest: ${valueText(row.largestFacility)} ${row.largestFacilityMW ? `(${row.largestFacilityMW} MW)` : ''}
+      `;
+    }
+
+    function rawToVerified(row, verifiedBy) {
+      return {
+        state: row.state,
+        abbreviation: row.abbreviation,
+        totalDataCenters: toNullableNumber(row.rawTotalDataCenters),
+        plannedDataCenters: toNullableNumber(row.rawPlannedDataCenters),
+        underConstructionDataCenters: toNullableNumber(row.rawUnderConstructionDataCenters),
+        pipelineDataCenters: toNullableNumber(row.rawPipelineDataCenters),
+        providerCount: toNullableNumber(row.rawProviderCount),
+        largestFacility: row.rawLargestFacility || null,
+        largestFacilityMW: toNullableNumber(row.rawLargestFacilityMW),
+        sourceName: row.sourceName,
+        sourceUrl: row.sourceUrl,
+        verifiedAt: new Date().toISOString(),
+        verifiedBy,
+        methodologyNote: row.rawNotes
+      };
+    }
+
+    function rawDiffersFromVerified(rawRow, verifiedRow) {
+      if (!verifiedRow) return hasAnyRawValue(rawRow);
+      return !sameValue(rawRow.rawTotalDataCenters, verifiedRow.totalDataCenters) ||
+        !sameValue(rawRow.rawPlannedDataCenters, verifiedRow.plannedDataCenters) ||
+        !sameValue(rawRow.rawUnderConstructionDataCenters, verifiedRow.underConstructionDataCenters) ||
+        !sameValue(rawRow.rawPipelineDataCenters, verifiedRow.pipelineDataCenters) ||
+        !sameValue(rawRow.rawProviderCount, verifiedRow.providerCount) ||
+        !sameValue(rawRow.rawLargestFacility, verifiedRow.largestFacility) ||
+        !sameValue(rawRow.rawLargestFacilityMW, verifiedRow.largestFacilityMW);
+    }
+    function rawValuesEqual(left, right) {
+      return sameValue(left.rawTotalDataCenters, right.rawTotalDataCenters) &&
+        sameValue(left.rawPlannedDataCenters, right.rawPlannedDataCenters) &&
+        sameValue(left.rawUnderConstructionDataCenters, right.rawUnderConstructionDataCenters) &&
+        sameValue(left.rawPipelineDataCenters, right.rawPipelineDataCenters) &&
+        sameValue(left.rawProviderCount, right.rawProviderCount) &&
+        sameValue(left.rawLargestFacility, right.rawLargestFacility) &&
+        sameValue(left.rawLargestFacilityMW, right.rawLargestFacilityMW);
+    }
+    function hasAnyRawValue(row) {
+      return [row.rawTotalDataCenters, row.rawPlannedDataCenters, row.rawUnderConstructionDataCenters, row.rawPipelineDataCenters, row.rawProviderCount, row.rawLargestFacility, row.rawLargestFacilityMW]
+        .some((value) => value !== null && value !== undefined && value !== '');
+    }
+    function sameValue(left, right) {
+      return (left ?? null) === (right ?? null);
+    }
+    function toNullableNumber(value) {
+      if (value === null || value === undefined || value === '') return null;
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    }
+    function valueText(value) {
+      return value === null || value === undefined || value === '' ? 'Pending verification' : value;
+    }
+    function setMessage(message, isError = false) {
+      const element = document.getElementById('message');
+      element.textContent = message;
+      element.className = isError ? 'error' : 'muted';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise Energy & AI Economy Intelligence | Energy & Wealth</title>
+  <style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(13, 110, 253, 0.16), transparent 30%),
+        radial-gradient(circle at 82% 12%, rgba(124, 58, 237, 0.14), transparent 32%),
+        radial-gradient(circle at 52% 82%, rgba(6, 182, 212, 0.12), transparent 34%),
+        linear-gradient(135deg, #f8fbff 0%, #eef6ff 46%, #fbfdff 100%);
+      color: #071a33;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: inherit; }
+    button, input, textarea, select { font: inherit; }
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #0d315f;
+      font-weight: 950;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0d6efd, #06b6d4);
+      box-shadow: 0 16px 32px rgba(13, 110, 253, 0.22);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 0.92rem;
+    }
+    .nav-link {
+      min-height: 42px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 16px;
+      border: 1px solid #cddceb;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: #173251;
+      font-size: 0.86rem;
+      font-weight: 900;
+      text-decoration: none;
+      box-shadow: 0 12px 28px rgba(16, 38, 67, 0.08);
+      backdrop-filter: blur(14px);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+    .nav-link:hover,
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 26px 68px rgba(16, 38, 67, 0.15);
+    }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(199, 220, 245, 0.95);
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(244,249,255,0.82));
+      box-shadow: 0 34px 94px rgba(18, 69, 145, 0.14);
+      padding: clamp(28px, 5vw, 58px);
+      backdrop-filter: blur(18px);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      right: -90px;
+      top: -130px;
+      width: 390px;
+      height: 390px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,110,253,0.22), transparent 66%);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: 180px;
+      bottom: -170px;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,58,237,0.15), transparent 64%);
+    }
+    .hero-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.72fr);
+      gap: 28px;
+      align-items: center;
+      z-index: 1;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #647b95;
+      font-size: 0.78rem;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+    }
+    h1 {
+      margin: 0;
+      color: #071a33;
+      font-size: clamp(3rem, 6vw, 5.8rem);
+      line-height: 0.92;
+      letter-spacing: -0.045em;
+      max-width: 850px;
+    }
+    .subtitle {
+      margin: 20px 0 0;
+      max-width: 850px;
+      color: #405a78;
+      font-size: clamp(1rem, 1.5vw, 1.18rem);
+      line-height: 1.7;
+      font-weight: 650;
+    }
+    .powered {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 22px;
+      border: 1px solid #cfe0ff;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.75);
+      color: #0d4ea6;
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      font-weight: 950;
+      box-shadow: 0 14px 30px rgba(13, 110, 253, 0.1);
+      backdrop-filter: blur(12px);
+    }
+    .pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #06b6d4;
+      box-shadow: 0 0 0 7px rgba(6, 182, 212, 0.14);
+    }
+    .signal-panel {
+      border: 1px solid rgba(13, 110, 253, 0.16);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.68);
+      padding: 18px;
+      box-shadow: 0 22px 60px rgba(16, 38, 67, 0.1);
+      backdrop-filter: blur(16px);
+    }
+    .mini-chart {
+      height: 190px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #0b1e39, #123a66);
+      padding: 18px;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    .mini-chart::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(6,182,212,0.28), transparent 38%),
+        radial-gradient(circle at 100% 30%, rgba(124,58,237,0.24), transparent 40%);
+    }
+    .chart-content { position: relative; z-index: 1; }
+    .chart-lines {
+      margin-top: 22px;
+      display: grid;
+      gap: 12px;
+    }
+    .chart-line {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.22);
+      overflow: hidden;
+    }
+    .chart-line span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0d6efd, #06b6d4);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .stat {
+      border: 1px solid #dce8f3;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.78);
+      padding: 13px;
+    }
+    .stat strong {
+      display: block;
+      color: #071a33;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+    .stat span {
+      display: block;
+      margin-top: 6px;
+      color: #647b95;
+      font-size: 0.72rem;
+      font-weight: 850;
+    }
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(420px, 1fr);
+      gap: 18px;
+      margin-top: 20px;
+      align-items: start;
+    }
+    .card {
+      border: 1px solid rgba(203, 222, 246, 0.94);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.82);
+      box-shadow: 0 18px 46px rgba(16, 38, 67, 0.08);
+      backdrop-filter: blur(16px);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+    .features {
+      padding: 22px;
+    }
+    .features h2,
+    .form-card h2 {
+      margin: 0;
+      color: #071a33;
+      font-size: 1.45rem;
+      letter-spacing: -0.02em;
+    }
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0 0;
+      display: grid;
+      gap: 13px;
+    }
+    .feature-list li {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      color: #405a78;
+      font-weight: 760;
+      line-height: 1.45;
+    }
+    .feature-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #edf5ff, #f2efff);
+      color: #0d6efd;
+      font-weight: 950;
+    }
+    .form-card {
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .form-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 100% 0%, rgba(13,110,253,0.1), transparent 38%);
+      pointer-events: none;
+    }
+    form {
+      position: relative;
+      margin-top: 18px;
+      display: grid;
+      gap: 14px;
+      z-index: 1;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    label {
+      display: grid;
+      gap: 7px;
+      color: #173251;
+      font-size: 0.78rem;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #cddceb;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.88);
+      color: #071a33;
+      padding: 13px 14px;
+      outline: none;
+      box-shadow: 0 10px 24px rgba(16, 38, 67, 0.05);
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+    textarea {
+      min-height: 132px;
+      resize: vertical;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 4px rgba(13,110,253,0.12);
+    }
+    .submit {
+      min-height: 56px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #0d6efd, #6d5dfc);
+      color: #fff;
+      font-weight: 950;
+      cursor: pointer;
+      box-shadow: 0 18px 38px rgba(13,110,253,0.26);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+    .submit:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 24px 50px rgba(13,110,253,0.32);
+    }
+    .form-note {
+      margin: 0;
+      color: #647b95;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+    .status {
+      display: none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 850;
+      line-height: 1.45;
+    }
+    .status.ok {
+      display: block;
+      background: #e9f8f0;
+      color: #087443;
+      border: 1px solid #ade2c5;
+    }
+    .status.error {
+      display: block;
+      background: #fff1e8;
+      color: #a24900;
+      border: 1px solid #efbd9b;
+    }
+    @media (max-width: 900px) {
+      .hero-grid,
+      .content-grid,
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+      .signal-panel,
+      .content-grid {
+        min-width: 0;
+      }
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="/calculator-preview">
+        <span class="brand-mark">EW</span>
+        <span>Energy & Wealth</span>
+      </a>
+      <a class="nav-link" href="/calculator-preview?view=plans">Preview Subscription Plans</a>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Enterprise access</p>
+          <h1>Enterprise Energy & AI Economy Intelligence</h1>
+          <p class="subtitle">
+            Get institutional access to state-by-state intelligence on AI infrastructure, data centers, energy demand, water pressure, workforce disruption, housing, taxes, and economic resilience.
+          </p>
+          <div class="powered">
+            <span class="pulse" aria-hidden="true"></span>
+            Powered by NAIERM economic modeling and infrastructure analysis.
+          </div>
+        </div>
+
+        <aside class="signal-panel" aria-label="Enterprise intelligence preview">
+          <div class="mini-chart">
+            <div class="chart-content">
+              <p class="eyebrow" style="color: rgba(255,255,255,0.68); margin-bottom: 8px;">Institutional signal stack</p>
+              <strong style="font-size: 1.25rem;">Risk, infrastructure, and resilience intelligence</strong>
+              <div class="chart-lines">
+                <div class="chart-line"><span style="width: 82%"></span></div>
+                <div class="chart-line"><span style="width: 68%"></span></div>
+                <div class="chart-line"><span style="width: 91%"></span></div>
+                <div class="chart-line"><span style="width: 56%"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><strong>50</strong><span>state profiles</span></div>
+            <div class="stat"><strong>AI</strong><span>impact models</span></div>
+            <div class="stat"><strong>PDF</strong><span>reports</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <article class="card features">
+        <h2>Built for enterprise decision teams</h2>
+        <ul class="feature-list">
+          <li><span class="feature-icon">01</span><span>State-by-state infrastructure and data center tracking for planning, policy, and investment teams.</span></li>
+          <li><span class="feature-icon">02</span><span>Energy, water, housing, tax, and public-system pressure analysis in one intelligence workflow.</span></li>
+          <li><span class="feature-icon">03</span><span>Workforce disruption and resilience views for economic development and transition strategy.</span></li>
+          <li><span class="feature-icon">04</span><span>Downloadable reports and institutional access options for research, briefings, and executive review.</span></li>
+        </ul>
+      </article>
+
+      <article class="card form-card">
+        <h2>Request enterprise access</h2>
+        <p class="form-note">Submissions are routed to enterprise@energyandwealth.com.</p>
+        <form id="enterprise-form">
+          <div class="field-grid">
+            <label>
+              Name
+              <input name="name" autocomplete="name" required placeholder="Jane Smith" />
+            </label>
+            <label>
+              Work email
+              <input name="email" type="email" autocomplete="email" required placeholder="jane@organization.com" />
+            </label>
+          </div>
+          <div class="field-grid">
+            <label>
+              Organization
+              <input name="organization" autocomplete="organization" required placeholder="Agency, utility, fund, university..." />
+            </label>
+            <label>
+              Role
+              <input name="role" autocomplete="organization-title" placeholder="Director, analyst, partner..." />
+            </label>
+          </div>
+          <label>
+            Access interest
+            <select name="accessType">
+              <option value="Enterprise subscription">Enterprise subscription</option>
+              <option value="Policy and research access">Policy and research access</option>
+              <option value="Data export or API access">Data export or API access</option>
+              <option value="Custom reporting">Custom reporting</option>
+            </select>
+          </label>
+          <label>
+            Message
+            <textarea name="message" placeholder="Tell us what intelligence, states, or reporting workflow your organization needs."></textarea>
+          </label>
+          <button class="submit" type="submit">Send Enterprise Inquiry</button>
+          <div id="form-status" class="status" role="status" aria-live="polite"></div>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('enterprise-form');
+    const statusBox = document.getElementById('form-status');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      statusBox.className = 'status';
+      statusBox.textContent = '';
+
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.timestamp = new Date().toISOString();
+
+      try {
+        const response = await fetch('/api/enterprise/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Unable to send inquiry');
+        form.reset();
+        statusBox.className = 'status ok';
+        statusBox.textContent = 'Enterprise inquiry received. The Energy & Wealth team will follow up soon.';
+      } catch (error) {
+        statusBox.className = 'status error';
+        statusBox.textContent = 'Your inquiry could not be sent from this page. Please email enterprise@energyandwealth.com directly.';
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send Enterprise Inquiry';
+      }
+    });
+  </script>
+</body>
+</html>

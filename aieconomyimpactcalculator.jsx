@@ -1,0 +1,2913 @@
+﻿import React, { useEffect, useMemo, useState } from 'react';
+import verifiedStateDataCenters from './verified_state_data_centers.json';
+
+const pendingText = 'Pending verification';
+
+const states = [
+  ['Alabama', 'AL'], ['Alaska', 'AK'], ['Arizona', 'AZ'], ['Arkansas', 'AR'], ['California', 'CA'],
+  ['Colorado', 'CO'], ['Connecticut', 'CT'], ['Delaware', 'DE'], ['Florida', 'FL'], ['Georgia', 'GA'],
+  ['Hawaii', 'HI'], ['Idaho', 'ID'], ['Illinois', 'IL'], ['Indiana', 'IN'], ['Iowa', 'IA'],
+  ['Kansas', 'KS'], ['Kentucky', 'KY'], ['Louisiana', 'LA'], ['Maine', 'ME'], ['Maryland', 'MD'],
+  ['Massachusetts', 'MA'], ['Michigan', 'MI'], ['Minnesota', 'MN'], ['Mississippi', 'MS'], ['Missouri', 'MO'],
+  ['Montana', 'MT'], ['Nebraska', 'NE'], ['Nevada', 'NV'], ['New Hampshire', 'NH'], ['New Jersey', 'NJ'],
+  ['New Mexico', 'NM'], ['New York', 'NY'], ['North Carolina', 'NC'], ['North Dakota', 'ND'], ['Ohio', 'OH'],
+  ['Oklahoma', 'OK'], ['Oregon', 'OR'], ['Pennsylvania', 'PA'], ['Rhode Island', 'RI'], ['South Carolina', 'SC'],
+  ['South Dakota', 'SD'], ['Tennessee', 'TN'], ['Texas', 'TX'], ['Utah', 'UT'], ['Vermont', 'VT'],
+  ['Virginia', 'VA'], ['Washington', 'WA'], ['West Virginia', 'WV'], ['Wisconsin', 'WI'], ['Wyoming', 'WY']
+];
+
+const statusStyles = {
+  verified: { label: 'Verified', background: '#e9f8f0', color: '#087443', border: '#ade2c5' },
+  estimated: { label: 'Estimated', background: '#fff7df', color: '#9a6100', border: '#f2c96d' },
+  missing: { label: 'Missing', background: '#fff1e8', color: '#a24900', border: '#efbd9b' },
+  pending: { label: 'Pending', background: '#eef3f8', color: '#476177', border: '#d8e3ee' }
+};
+
+const shell = {
+  minHeight: '100vh',
+  background: 'linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #f7fbf8 100%)',
+  color: '#071a33',
+  fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+};
+
+const panel = {
+  background: 'rgba(255, 255, 255, 0.88)',
+  border: '1px solid #d9e5f0',
+  borderRadius: '12px',
+  boxShadow: '0 12px 32px rgba(24, 49, 83, 0.08)'
+};
+
+const sourceMetric = (record, key, sourceName, sourceUrl, methodologyNote) => {
+  const hasValue = record?.[key] !== null && record?.[key] !== undefined;
+  return {
+    value: hasValue ? record[key] : null,
+    status: hasValue ? (record?.metricStatus || 'estimated') : 'missing',
+    sourceName: hasValue ? sourceName : 'Pending review',
+    sourceUrl: hasValue ? sourceUrl : '#',
+    lastUpdated: record?.verifiedAt || null,
+    methodologyNote: hasValue ? methodologyNote : 'No reviewed estimate is available yet.'
+  };
+};
+
+const formatMetricValue = (metric, suffix = '') => {
+  if (!metric || metric.value === null || metric.value === undefined) return pendingText;
+  if (typeof metric.value === 'number') return `${metric.value.toLocaleString('en-US')}${suffix}`;
+  return `${metric.value}${suffix && String(metric.value).includes(suffix.trim()) ? '' : suffix}`;
+};
+
+const parseNumber = (value) => {
+  if (typeof value === 'number') return value;
+  const match = String(value || '').replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+  return match ? Number(match[0]) : 0;
+};
+
+const parseRangeNumber = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  const text = String(value).replace(/,/g, '');
+  const range = text.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/);
+  if (range) return (Number(range[1]) + Number(range[2])) / 2;
+  const numbers = [...text.matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0]));
+  if (!numbers.length) return null;
+  if (/\+/.test(text)) return numbers[0];
+  if (numbers.length >= 2 && /planned|existing|under construction|pipeline/i.test(text)) return numbers.reduce((sum, number) => sum + number, 0);
+  return numbers[0];
+};
+
+const clampScore = (value) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
+  return Math.max(0, Math.min(100, Math.round(Number(value))));
+};
+
+const sparkPoints = () => 'M0 25 C12 24 16 22 28 24 C40 26 45 19 58 21 C70 23 78 20 88 24 C100 28 109 18 121 20 C134 22 143 15 152 8 C162 14 170 12 180 13';
+
+const jobSpark = (title) => {
+  if (title === 'Jobs Created') return 'M0 36 C14 36 19 30 30 31 C42 32 51 34 62 37 C74 40 83 30 95 33 C108 36 114 21 128 19 C140 24 147 29 158 22 C168 17 174 13 180 15';
+  if (title === 'Net Change') return 'M0 14 C12 20 20 30 32 31 C45 32 52 17 64 14 C76 10 84 11 96 17 C108 23 117 21 128 25 C142 27 152 28 162 34 C170 38 176 42 180 45';
+  return 'M0 34 C12 36 19 31 30 32 C43 33 50 26 60 29 C73 33 82 27 92 30 C104 33 111 20 122 22 C134 24 139 31 150 25 C162 19 170 17 180 12';
+};
+
+const savedProfilesKey = 'aiEconomyImpactSavedProfiles';
+const intelligenceAccessKey = 'energyWealthIntelligenceAccess';
+const intelligenceSignedInKey = 'energyWealthSignedIn';
+const stripeCustomerIdKey = 'energyWealthStripeCustomerId';
+const pendingCheckoutKey = 'energyWealthPendingStripeCheckout';
+const stripeCheckoutSessionIdKey = 'energyWealthStripeCheckoutSessionId';
+
+const readCheckoutReturnState = () => {
+  if (typeof window === 'undefined') return '';
+  const params = new URLSearchParams(window.location.search);
+  const isCheckoutReturn = window.location.pathname === '/account' && params.get('checkout') === 'success' && params.get('session_id');
+  return isCheckoutReturn ? 'Verifying your Stripe subscription access...' : '';
+};
+
+const readAccessState = () => {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(intelligenceAccessKey) === 'active';
+};
+
+const readSignedInState = () => {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(intelligenceSignedInKey) === 'true' || readAccessState();
+};
+
+const normalizeStateName = (value) => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const byName = states.find(([name]) => name.toLowerCase() === trimmed.toLowerCase());
+  if (byName) return byName[0];
+  const byAbbreviation = states.find(([, abbreviation]) => abbreviation.toLowerCase() === trimmed.toLowerCase());
+  return byAbbreviation ? byAbbreviation[0] : null;
+};
+
+const readSavedProfiles = () => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(savedProfilesKey) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((state) => states.some(([name]) => name === state)) : [];
+  } catch {
+    return [];
+  }
+};
+
+const GlobalResponsiveStyles = () => (
+  <style>{`
+    @keyframes aiBorderGlow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(13,110,253,0.24), 0 26px 70px rgba(13,110,253,0.16); }
+      50% { box-shadow: 0 0 0 1px rgba(6,182,212,0.42), 0 32px 84px rgba(124,58,237,0.22); }
+    }
+    @keyframes aiGradientDrift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .ai-hover-lift { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+    .ai-hover-lift:hover { transform: translateY(-6px); box-shadow: 0 28px 72px rgba(16, 38, 67, 0.16) !important; }
+          .ai-locked-preview:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 22px 46px rgba(0,0,0,0.24) !important;
+        }
+        .ai-map-node {
+          animation: aiNodePulse 2.4s ease-in-out infinite;
+        }
+        .ai-map-node:nth-of-type(2) { animation-delay: 0.35s; }
+        .ai-map-node:nth-of-type(3) { animation-delay: 0.7s; }
+        .ai-map-node:nth-of-type(4) { animation-delay: 1.05s; }
+        @keyframes aiNodePulse {
+          0%, 100% { opacity: 0.55; transform: scale(0.92); }
+          50% { opacity: 1; transform: scale(1.12); }
+        }
+        .us-state-shape {
+          transition: fill 420ms ease, opacity 220ms ease, stroke 180ms ease, stroke-width 180ms ease, transform 180ms ease;
+          filter: drop-shadow(0 0 0 rgba(0,0,0,0));
+        }
+        g:hover > .us-state-shape {
+          transform: translateY(-2px) scale(1.006);
+          filter: drop-shadow(0 0 14px var(--state-glow));
+        }
+        .ai-heat-pulse {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: aiHeatPulse 2.1s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @keyframes aiHeatPulse {
+          0%, 100% { opacity: 0.35; transform: scale(0.72); }
+          50% { opacity: 0.95; transform: scale(1.55); }
+        }
+    .ai-plan-featured { animation: aiBorderGlow 3.8s ease-in-out infinite; }
+    .ai-soft-gradient { background-size: 240% 240%; animation: aiGradientDrift 8s ease infinite; }
+    @media (max-width: 1100px) {
+      .ai-plans-grid { grid-template-columns: 1fr !important; }
+      .ai-plan-featured { transform: none !important; }
+      .ai-locked-preview-grid { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 920px) {
+      .ai-layout { grid-template-columns: 1fr !important; }
+      .ai-sidebar { position: static !important; width: auto !important; height: auto !important; flex-direction: row !important; overflow-x: auto; border-right: 0 !important; border-bottom: 1px solid #dce8f3; }
+      .ai-content { padding: 1rem !important; }
+      .ai-inner { max-width: none !important; }
+      .ai-hero { grid-template-columns: 1fr !important; }
+      .ai-two { grid-template-columns: 1fr !important; }
+      .ai-metrics { grid-template-columns: 1fr !important; }
+      .ai-facility-grid { grid-template-columns: 1fr !important; }
+      .ai-env-grid { grid-template-columns: 1fr !important; }
+      .ai-env-card-grid { grid-template-columns: 1fr !important; }
+      .ai-cost-grid { grid-template-columns: 1fr !important; }
+      .ai-current-projects-grid { grid-template-columns: 1fr !important; }
+      .ai-current-project-card { grid-column: auto !important; }
+      .ai-eht-header { grid-template-columns: 1fr !important; }
+      .ai-eht-cards { grid-template-columns: 1fr !important; }
+          .ai-eht-summary { grid-template-columns: 1fr !important; }
+          .ai-subscription-grid { grid-template-columns: 1fr !important; }
+          .ai-heat-tooltip { position: static !important; width: auto !important; margin: 0.85rem !important; }
+          .ai-state-picker-menu { position: static !important; margin-top: 0.6rem; }
+      .ai-plan-shell { padding: 1rem !important; }
+      .ai-plan-hero { padding: 1.35rem !important; }
+      .ai-mobile-sticky-cta { position: sticky !important; bottom: 0 !important; z-index: 20; margin: 1rem -1rem -1rem !important; border-radius: 18px 18px 0 0 !important; }
+    }
+    @media print {
+      body { background: #fff !important; }
+      .ai-sidebar, .ai-no-print { display: none !important; }
+      .ai-layout { display: block !important; }
+      .ai-content { padding: 0 !important; }
+      .ai-inner { max-width: none !important; margin: 0 !important; }
+      main { background: #fff !important; }
+      article, section { break-inside: avoid; page-break-inside: avoid; }
+    }
+  `}</style>
+);
+
+const HeartIcon = ({ filled = false }) => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" style={{ display: 'block' }}>
+    <path
+      d="M12 21.2l-1.45-1.32C5.4 15.2 2 12.12 2 8.34 2 5.26 4.42 2.85 7.5 2.85c1.74 0 3.41.81 4.5 2.08a5.98 5.98 0 0 1 4.5-2.08c3.08 0 5.5 2.41 5.5 5.49 0 3.78-3.4 6.86-8.55 11.54L12 21.2z"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const LockIcon = ({ size = 22 }) => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} style={{ display: 'block' }}>
+    <rect x="5" y="10" width="14" height="10" rx="2.4" fill="none" stroke="currentColor" strokeWidth="2" />
+    <path d="M8 10V7.7C8 5.25 9.75 3.5 12 3.5s4 1.75 4 4.2V10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M12 14v2.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const AIEconomyImpactCalculator = () => {
+  const [isSignedIn, setIsSignedIn] = useState(readSignedInState);
+  const [isSubscribed, setIsSubscribed] = useState(readAccessState);
+  const stateNames = useMemo(() => states.map(([state]) => state).sort((a, b) => a.localeCompare(b)), []);
+  const [selectedState, setSelectedState] = useState('Alabama');
+  const [activeView, setActiveView] = useState(() => {
+    if (typeof window === 'undefined') return 'calculator';
+    if (window.location.pathname === '/account') return 'account';
+    if (window.location.pathname === '/billing') return 'billing';
+    if (window.location.pathname === '/subscription') return 'subscription';
+    return new URLSearchParams(window.location.search).get('view') === 'plans' ? 'plans' : 'calculator';
+  });
+  const [savedProfiles, setSavedProfiles] = useState(readSavedProfiles);
+  const [checkoutError, setCheckoutError] = useState('');
+  const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+  const [accessVerificationMessage, setAccessVerificationMessage] = useState(readCheckoutReturnState);
+
+  useEffect(() => {
+    if (isSubscribed) window.localStorage.setItem(savedProfilesKey, JSON.stringify(savedProfiles));
+  }, [savedProfiles, isSubscribed]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    const hasCheckoutSuccess = params.get('checkout') === 'success' && sessionId;
+
+    if (window.location.pathname !== '/account' || !hasCheckoutSuccess) return;
+
+    let isMounted = true;
+    setAccessVerificationMessage('Verifying your Stripe subscription access...');
+
+    fetch('/api/stripe/verify-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.error || 'Unable to verify paid access.');
+        }
+        return payload;
+      })
+      .then((payload) => {
+        if (!isMounted) return;
+        window.localStorage.setItem(intelligenceAccessKey, 'active');
+        window.localStorage.setItem(intelligenceSignedInKey, 'true');
+        window.localStorage.setItem(stripeCheckoutSessionIdKey, sessionId);
+        if (payload.customerId) window.localStorage.setItem(stripeCustomerIdKey, payload.customerId);
+        window.localStorage.removeItem(pendingCheckoutKey);
+        window.history.replaceState({}, '', '/account');
+        setIsSignedIn(true);
+        setIsSubscribed(true);
+        setActiveView('account');
+        setAccessVerificationMessage('');
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        window.localStorage.removeItem(pendingCheckoutKey);
+        setAccessVerificationMessage(error.message || 'Unable to verify paid access.');
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const visibleSavedProfiles = isSubscribed ? savedProfiles : [];
+  const isCurrentStateSaved = isSubscribed && savedProfiles.includes(selectedState);
+  const toggleSavedProfile = () => {
+    if (!isSubscribed) return;
+    setSavedProfiles((current) => {
+      if (current.includes(selectedState)) return current.filter((state) => state !== selectedState);
+      return [...current, selectedState].sort((a, b) => a.localeCompare(b));
+    });
+  };
+
+  const activateBypassAccess = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(intelligenceAccessKey, 'active');
+      window.localStorage.setItem(intelligenceSignedInKey, 'true');
+      if (!window.localStorage.getItem(stripeCustomerIdKey)) {
+        window.localStorage.setItem(stripeCustomerIdKey, 'cus_demo_energy_wealth');
+      }
+      window.history.pushState({}, '', '/account');
+    }
+    setIsSignedIn(true);
+    setIsSubscribed(true);
+    setActiveView('account');
+  };
+
+  const startStripeCheckout = async () => {
+    setIsStartingCheckout(true);
+    setCheckoutError('');
+    try {
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || 'Unable to start checkout.');
+      }
+      window.localStorage.setItem(pendingCheckoutKey, 'true');
+      window.location.assign(payload.url);
+    } catch (error) {
+      setCheckoutError(error.message || 'Unable to start checkout.');
+    } finally {
+      setIsStartingCheckout(false);
+    }
+  };
+
+  const openCalculator = (stateName) => {
+    const normalizedState = normalizeStateName(stateName);
+    if (normalizedState) setSelectedState(normalizedState);
+    if (typeof window !== 'undefined') window.history.pushState({}, '', '/calculator-preview');
+    setActiveView('calculator');
+  };
+
+  const openPlans = () => {
+    if (typeof window !== 'undefined') window.history.pushState({}, '', '/calculator-preview?view=plans');
+    setActiveView('plans');
+  };
+
+  const openAccountDashboard = () => {
+    if (typeof window !== 'undefined') window.history.pushState({}, '', '/account');
+    setActiveView('account');
+  };
+
+  const openBilling = () => {
+    if (typeof window !== 'undefined') window.history.pushState({}, '', '/billing');
+    setActiveView('billing');
+  };
+
+  const openSubscription = () => {
+    if (typeof window !== 'undefined') window.history.pushState({}, '', '/subscription');
+    setActiveView('subscription');
+  };
+
+  const signOut = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(intelligenceAccessKey);
+      window.localStorage.removeItem(intelligenceSignedInKey);
+      window.localStorage.removeItem(stripeCustomerIdKey);
+      window.localStorage.removeItem(pendingCheckoutKey);
+      window.localStorage.removeItem(stripeCheckoutSessionIdKey);
+      window.history.pushState({}, '', '/calculator-preview');
+    }
+    setIsSignedIn(false);
+    setIsSubscribed(false);
+    setActiveView('calculator');
+  };
+
+  const selectedRecord = useMemo(() => {
+    const verifiedRecord = verifiedStateDataCenters.find((item) => item.state === selectedState);
+    if (verifiedRecord) return verifiedRecord;
+    const option = states.find(([state]) => state === selectedState);
+    return { state: selectedState, abbreviation: option?.[1] || '', sourceName: 'Pending review', sourceUrl: '#', verifiedAt: null };
+  }, [selectedState]);
+
+  const selectedData = useMemo(() => {
+    const sourceName = selectedRecord?.sourceName || 'Reviewed estimate';
+    const sourceUrl = selectedRecord?.sourceUrl || '#';
+    const note = selectedRecord?.methodologyNote || 'Reviewed estimate metrics imported from available state-level data.';
+
+    return {
+      state: selectedRecord?.state || selectedState || 'Alabama',
+      abbreviation: selectedRecord?.abbreviation || states.find(([state]) => state === selectedState)?.[1] || 'AL',
+      totalDataCenters: sourceMetric(selectedRecord, 'totalDataCenters', sourceName, sourceUrl, note),
+      energyGridSharePercent: sourceMetric(selectedRecord, 'energyGridSharePercent', sourceName, sourceUrl, note),
+      estimatedWaterUseGallons: sourceMetric(selectedRecord, 'estimatedWaterUseGallons', sourceName, sourceUrl, note),
+      gridPressureLevel: sourceMetric(selectedRecord, 'gridPressureLevel', sourceName, sourceUrl, note),
+      waterImpactLevel: sourceMetric(selectedRecord, 'waterImpactLevel', sourceName, sourceUrl, note),
+      largestKnownFacility: sourceMetric(selectedRecord, 'largestFacility', sourceName, sourceUrl, note),
+      currentProject: sourceMetric(selectedRecord, 'currentProject', selectedRecord?.facilityProjectSourceName || sourceName, selectedRecord?.facilityProjectSourceUrl || sourceUrl, note),
+      marketStatus: selectedRecord?.marketStatus || null,
+      recentProjects: Array.isArray(selectedRecord?.recentProjects) ? selectedRecord.recentProjects : [],
+      largestFacilityDetails: Array.isArray(selectedRecord?.largestFacilityDetails) ? selectedRecord.largestFacilityDetails : [],
+      currentProjectDetails: Array.isArray(selectedRecord?.currentProjectDetails) ? selectedRecord.currentProjectDetails : [],
+      additionalProjectDetails: Array.isArray(selectedRecord?.additionalProjectDetails) ? selectedRecord.additionalProjectDetails : [],
+      currentProjects: Array.isArray(selectedRecord?.currentProjects) ? selectedRecord.currentProjects : [],
+      aiJobsImpact: selectedRecord?.aiJobsImpact || null,
+      environmentalImpact: selectedRecord?.environmentalImpact || null,
+      electricityHousingTaxes: Array.isArray(selectedRecord?.electricityHousingTaxes) ? selectedRecord.electricityHousingTaxes : [],
+      resilienceDashboard: selectedRecord?.resilienceDashboard || null,
+      gridWaterNotes: selectedRecord?.gridWaterNotes || null,
+      recentNotesImageUrl: selectedRecord?.recentNotesImageUrl || null,
+      facilityImageUrl: selectedRecord?.facilityImageUrl || (selectedRecord?.state === 'New York' ? '/assets/nyc-building.png' : null),
+      projectMapUrl: selectedRecord?.currentProjectImageUrl || (selectedRecord?.state === 'New York' && selectedRecord?.currentProject ? '/assets/sabey-data-center-manhattan.png' : null),
+      verifiedAt: selectedRecord?.verifiedAt || '2026-05-14'
+    };
+  }, [selectedRecord]);
+
+  const metricCards = [
+    { title: 'Active Data Centers', metric: selectedData.totalDataCenters, accent: '#1f7cff', icon: 'DC', sub: 'Existing + planned' },
+    { title: '% of State Grid Used', metric: selectedData.energyGridSharePercent, accent: '#18b66a', icon: 'KW', sub: 'Estimated' },
+    { title: 'Grid Pressure', metric: selectedData.gridPressureLevel, accent: '#f59f00', icon: 'GRID', sub: 'Estimated' },
+    { title: 'Estimated Water Usage', metric: selectedData.estimatedWaterUseGallons, accent: '#139cf7', icon: 'H2O', sub: 'Annual use' },
+    { title: 'Water Impact', metric: selectedData.waterImpactLevel, accent: '#8f45db', icon: 'WTR', sub: 'Estimated' }
+  ];
+
+  if (activeView === 'plans') {
+    return (
+      <main style={shell}>
+        <GlobalResponsiveStyles />
+        <SubscriptionPlansScreen onBack={openCalculator} onStartCheckout={startStripeCheckout} checkoutError={checkoutError} isStartingCheckout={isStartingCheckout} />
+      </main>
+    );
+  }
+
+  if (activeView === 'account') {
+    return (
+      <main style={shell}>
+        <GlobalResponsiveStyles />
+        <AccessDashboard
+          isSignedIn={isSignedIn}
+          isSubscribed={isSubscribed}
+          accessVerificationMessage={accessVerificationMessage}
+          selectedState={selectedState}
+          records={verifiedStateDataCenters}
+          onOpenCalculator={openCalculator}
+          onViewPlans={openPlans}
+          onManageBilling={openBilling}
+          onManageSubscription={openSubscription}
+          onSignOut={signOut}
+        />
+      </main>
+    );
+  }
+
+  if (activeView === 'billing') {
+    return (
+      <main style={shell}>
+        <GlobalResponsiveStyles />
+        <BillingDashboard
+          isSignedIn={isSignedIn}
+          isSubscribed={isSubscribed}
+          onBack={openAccountDashboard}
+          onViewPlans={openPlans}
+          onSignOut={signOut}
+        />
+      </main>
+    );
+  }
+
+  if (activeView === 'subscription') {
+    return (
+      <main style={shell}>
+        <GlobalResponsiveStyles />
+        <BillingDashboard
+          isSignedIn={isSignedIn}
+          isSubscribed={isSubscribed}
+          onBack={openAccountDashboard}
+          onViewPlans={openPlans}
+          onSignOut={signOut}
+          variant="subscription"
+        />
+      </main>
+    );
+  }
+
+  return (
+    <main style={shell}>
+      <GlobalResponsiveStyles />
+      <div className="ai-layout" style={{ display: 'grid', gridTemplateColumns: '112px minmax(0, 1fr)' }}>
+        <Sidebar selectedState={selectedData.state} savedProfiles={visibleSavedProfiles} onSelectState={setSelectedState} isSubscribed={isSubscribed} onOpenDashboard={openAccountDashboard} onSignOut={signOut} />
+        <div className="ai-content" style={{ padding: '2rem 1.5rem 2.6rem' }}>
+          <div className="ai-inner" style={{ maxWidth: 1540, margin: 0 }}>
+          <header className="ai-hero" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 520px', gap: '2rem', alignItems: 'center', marginBottom: '1.4rem' }}>
+            <div>
+              <p style={{ margin: '0 0 0.45rem', color: '#9aaabd', fontSize: '0.82rem', fontWeight: 900, letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+                Energy and Wealth
+              </p>
+              <h1 style={{ margin: 0, maxWidth: 620, fontSize: 'clamp(3rem, 4.6vw, 4.3rem)', lineHeight: 1.02, letterSpacing: 0, color: '#071a33' }}>
+                AI Economy Impact Calculator
+              </h1>
+              <p style={{ margin: '1rem 0 0', maxWidth: 760, color: '#4d637d', fontSize: '1.04rem', lineHeight: 1.7 }}>
+                This calculator analyzes the impact of artificial intelligence on each U.S. state's economy since AI's emergence, and provides actionable insights for understanding AI's economic transformation across America.
+              </p>
+            </div>
+            <div>
+              <label style={{ display: 'block', color: '#071a33', fontSize: '0.78rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '0.55rem' }}>
+                Select state
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 1fr) 56px auto', gap: '0.75rem', alignItems: 'center' }}>
+                <StatePicker selectedState={selectedState} stateNames={stateNames} onSelectState={setSelectedState} />
+                <button
+                  type="button"
+                  onClick={toggleSavedProfile}
+                  disabled={!isSubscribed}
+                  aria-label={isSubscribed ? (isCurrentStateSaved ? `Remove ${selectedState} from saved profiles` : `Save ${selectedState} profile`) : 'Subscribe to save state profiles'}
+                  title={isSubscribed ? (isCurrentStateSaved ? `Remove ${selectedState}` : `Save ${selectedState}`) : 'Subscribe to save profiles'}
+                  style={{ minHeight: 56, border: `1px solid ${isCurrentStateSaved ? '#ffb3c1' : '#cddceb'}`, borderRadius: 10, background: isCurrentStateSaved ? '#fff0f3' : '#fff', color: isCurrentStateSaved ? '#e0315b' : '#6b7d91', display: 'grid', placeItems: 'center', fontSize: '1.4rem', fontWeight: 950, boxShadow: '0 10px 25px rgba(25, 62, 111, 0.08)', cursor: isSubscribed ? 'pointer' : 'not-allowed', opacity: isSubscribed ? 1 : 0.62 }}
+                >
+                  {isSubscribed ? <HeartIcon filled={isCurrentStateSaved} /> : <LockIcon />}
+                </button>
+                <a href="https://naierm.com" target="_blank" rel="noreferrer" style={{ minHeight: 56, borderRadius: 10, background: '#0d6efd', color: '#fff', textDecoration: 'none', display: 'grid', placeItems: 'center', padding: '0 1rem', fontSize: '0.9rem', fontWeight: 900, boxShadow: '0 10px 25px rgba(13, 110, 253, 0.18)', whiteSpace: 'nowrap' }}>
+                  Visit NAIERM
+                </a>
+              </div>
+              <p style={{ margin: '1rem 0 0', color: '#6b7d91', textAlign: 'right', fontSize: '0.86rem', fontWeight: 700 }}>
+                Data last updated: {String(selectedData.verifiedAt).slice(0, 10)}
+              </p>
+            </div>
+          </header>
+
+          <section style={{ ...panel, overflow: 'hidden', marginBottom: '1.6rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1rem 0.35rem', borderBottom: '1px solid #edf3f9' }}>
+              <span style={{ color: '#1f62d8', fontSize: '0.86rem', fontWeight: 900 }}>Reviewed estimates</span>
+              <span style={{ width: 16, height: 16, border: '1px solid #9db5d1', color: '#527297', borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: '0.7rem', fontWeight: 900 }}>i</span>
+            </div>
+            <div className="ai-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))' }}>
+              {metricCards.map((item) => <MetricStripCard key={item.title} {...item} />)}
+            </div>
+            {selectedData.gridWaterNotes && (
+              <p style={{ margin: 0, padding: '0.8rem 1.25rem', borderTop: '1px solid #e0eaf4', color: '#4d637d', fontSize: '0.92rem', fontWeight: 700 }}>
+                {selectedData.gridWaterNotes}
+              </p>
+            )}
+          </section>
+
+          {isSubscribed ? (
+            <>
+              <section className="ai-two" style={{ display: 'grid', gridTemplateColumns: 'minmax(430px, 0.95fr) minmax(620px, 1.35fr)', gap: '1.4rem', marginBottom: '1.4rem' }}>
+                <FacilityCard title="Largest Known Facility" metric={selectedData.largestKnownFacility} details={selectedData.largestFacilityDetails} imageUrl={selectedData.facilityImageUrl} />
+                <ProjectCard title="Current Project" metric={selectedData.currentProject} details={selectedData.currentProjectDetails} mapUrl={selectedData.projectMapUrl} />
+              </section>
+
+              {selectedData.currentProjects.length > 0 && (
+                <section id="projects" style={{ marginBottom: '1.4rem' }}>
+                  <CurrentProjectsPanel projects={selectedData.currentProjects} state={selectedData.state} />
+                </section>
+              )}
+
+              <section className="ai-two" style={{ display: 'grid', gridTemplateColumns: 'minmax(620px, 1.35fr) minmax(430px, 0.85fr)', gap: '1.4rem', marginBottom: '1.4rem' }}>
+                {selectedData.aiJobsImpact && <JobsPanel impact={selectedData.aiJobsImpact} />}
+                {selectedData.aiJobsImpact && <JobBreakdownPanel impact={selectedData.aiJobsImpact} />}
+              </section>
+
+              <section style={{ marginBottom: '1.4rem' }}>
+                <RecentNotes status={selectedData.marketStatus} projects={selectedData.recentProjects} additionalItems={selectedData.additionalProjectDetails} imageUrl={selectedData.recentNotesImageUrl} />
+              </section>
+
+              {selectedData.environmentalImpact && (
+                <section style={{ marginBottom: '1.4rem' }}>
+                  <EnvironmentPanel impact={selectedData.environmentalImpact} />
+                </section>
+              )}
+
+              {selectedData.electricityHousingTaxes.length > 0 && (
+                <section style={{ marginBottom: '1.4rem' }}>
+                  <ElectricityHousingTaxesPanel blocks={selectedData.electricityHousingTaxes} state={selectedData.state} />
+                </section>
+              )}
+
+              {selectedData.resilienceDashboard && (
+                <section style={{ marginBottom: '1.4rem' }}>
+                  <ResilienceDashboardPanel dashboard={selectedData.resilienceDashboard} state={selectedData.state} />
+                </section>
+              )}
+            </>
+          ) : (
+            <SubscriptionLockPanel onUnlock={startStripeCheckout} onPreviewPlans={openPlans} />
+          )}
+
+          <footer style={{ ...panel, padding: '1rem 1.25rem', display: 'flex', gap: '0.8rem', alignItems: 'flex-start', color: '#4d637d', fontSize: '0.9rem', lineHeight: 1.5 }}>
+            <strong style={{ color: '#1f7cff' }}>i</strong>
+            <span>The information provided represents estimates based on available research and data analysis. Figures are directional and should be used for strategic planning, not definitive forecasts.</span>
+          </footer>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+};
+
+const lockedIntelligencePreviews = [
+  { title: 'Workforce Disruption Forecast', type: 'bars', accent: '#1f7cff', note: 'Jobs at risk vs. emerging AI roles' },
+  { title: 'Grid Stress Heatmap', type: 'heatmap', accent: '#7c3aed', note: 'Power demand and utility exposure' },
+  { title: 'Water Consumption Projection', type: 'line', accent: '#06b6d4', note: 'Cooling demand and basin pressure' },
+  { title: 'AI Economic Resilience Score', type: 'score', accent: '#18b66a', note: 'Adaptation, policy, and fiscal readiness' }
+];
+
+const unlockTimeline = [
+  { title: 'Infrastructure Intelligence', text: 'Track data center expansion and grid strain.' },
+  { title: 'Workforce Forecasting', text: 'Monitor job displacement and emerging careers.' },
+  { title: 'Economic Pressure Analysis', text: 'Housing, taxes, utilities, and state spending.' },
+  { title: 'Future Resilience Modeling', text: 'See which states are adapting vs. falling behind.' }
+];
+
+const proofItems = ['Economic research', 'Infrastructure planning', 'Workforce transition analysis', 'AI policy monitoring'];
+
+const heatMapModes = {
+  density: { label: 'Data Centers', title: 'Data Center Density' },
+  pipeline: { label: 'Pipeline', title: 'Pipeline Growth' },
+  risk: { label: 'AI Risk', title: 'AI Impact Risk' }
+};
+
+const usStateShapes = [
+  { abbr: 'WA', name: 'Washington', d: 'M92 86 L178 78 L194 128 L178 162 L114 154 L88 122 Z', label: [138, 120], pulse: [162, 120] },
+  { abbr: 'OR', name: 'Oregon', d: 'M84 128 L178 166 L164 222 L78 218 L60 172 Z', label: [122, 188], pulse: [146, 190] },
+  { abbr: 'CA', name: 'California', d: 'M70 222 L160 228 L154 310 L194 404 L172 486 L106 438 L76 346 L54 272 Z', label: [118, 340], pulse: [140, 364] },
+  { abbr: 'ID', name: 'Idaho', d: 'M184 78 L248 92 L238 154 L268 176 L246 252 L166 222 L180 164 L198 132 Z', label: [220, 174], pulse: [234, 186] },
+  { abbr: 'NV', name: 'Nevada', d: 'M164 228 L246 254 L224 376 L194 404 L154 310 Z', label: [202, 308], pulse: [210, 326] },
+  { abbr: 'AZ', name: 'Arizona', d: 'M196 408 L278 432 L270 514 L186 488 Z', label: [232, 462], pulse: [250, 464] },
+  { abbr: 'UT', name: 'Utah', d: 'M250 254 L326 268 L316 398 L226 376 Z', label: [278, 330], pulse: [294, 338] },
+  { abbr: 'MT', name: 'Montana', d: 'M248 90 L406 110 L394 198 L268 176 L238 154 Z', label: [326, 146], pulse: [356, 152] },
+  { abbr: 'WY', name: 'Wyoming', d: 'M268 182 L394 202 L382 288 L326 268 L248 254 Z', label: [326, 236], pulse: [352, 242] },
+  { abbr: 'CO', name: 'Colorado', d: 'M326 272 L426 284 L420 404 L318 398 Z', label: [372, 340], pulse: [390, 344] },
+  { abbr: 'NM', name: 'New Mexico', d: 'M318 402 L420 408 L420 512 L276 514 L280 432 Z', label: [354, 462], pulse: [382, 466] },
+  { abbr: 'ND', name: 'North Dakota', d: 'M408 112 L518 116 L524 184 L396 198 Z', label: [462, 154], pulse: [488, 156] },
+  { abbr: 'SD', name: 'South Dakota', d: 'M396 204 L526 188 L534 260 L384 288 Z', label: [462, 238], pulse: [492, 240] },
+  { abbr: 'NE', name: 'Nebraska', d: 'M384 292 L536 266 L574 326 L424 404 L426 284 Z', label: [480, 334], pulse: [512, 338] },
+  { abbr: 'KS', name: 'Kansas', d: 'M426 408 L580 334 L592 418 L422 512 Z', label: [510, 428], pulse: [544, 428] },
+  { abbr: 'OK', name: 'Oklahoma', d: 'M424 422 L592 422 L624 472 L526 472 L526 514 L424 514 Z', label: [516, 462], pulse: [558, 460] },
+  { abbr: 'TX', name: 'Texas', d: 'M426 518 L530 518 L532 476 L626 476 L690 546 L662 604 L594 590 L552 548 L492 596 L432 566 Z', label: [548, 546], pulse: [604, 548] },
+  { abbr: 'MN', name: 'Minnesota', d: 'M522 118 L606 126 L638 178 L626 246 L536 260 L528 188 Z', label: [582, 190], pulse: [604, 198] },
+  { abbr: 'IA', name: 'Iowa', d: 'M538 264 L628 250 L654 310 L578 330 Z', label: [594, 294], pulse: [614, 298] },
+  { abbr: 'MO', name: 'Missouri', d: 'M582 334 L658 314 L706 374 L678 446 L596 418 Z', label: [638, 380], pulse: [658, 386] },
+  { abbr: 'AR', name: 'Arkansas', d: 'M598 422 L678 450 L676 518 L626 548 L626 474 Z', label: [642, 486], pulse: [660, 488] },
+  { abbr: 'LA', name: 'Louisiana', d: 'M628 552 L678 522 L724 554 L712 604 L646 594 Z', label: [676, 566], pulse: [696, 572] },
+  { abbr: 'WI', name: 'Wisconsin', d: 'M612 128 L680 154 L700 230 L628 246 L640 178 Z', label: [662, 202], pulse: [680, 208] },
+  { abbr: 'IL', name: 'Illinois', d: 'M656 314 L706 300 L734 392 L682 446 L710 374 Z', label: [698, 374], pulse: [712, 386] },
+  { abbr: 'MS', name: 'Mississippi', d: 'M682 452 L730 448 L748 542 L724 554 L680 520 Z', label: [714, 498], pulse: [730, 502] },
+  { abbr: 'MI', name: 'Michigan', d: 'M694 150 L776 170 L794 236 L742 270 L704 236 L682 154 Z M752 282 L806 274 L820 326 L742 338 Z', label: [754, 238], pulse: [776, 244] },
+  { abbr: 'IN', name: 'Indiana', d: 'M710 304 L758 294 L772 386 L736 404 Z', label: [742, 350], pulse: [754, 354] },
+  { abbr: 'KY', name: 'Kentucky', d: 'M736 406 L806 380 L870 402 L838 436 L722 452 Z', label: [798, 416], pulse: [824, 418] },
+  { abbr: 'TN', name: 'Tennessee', d: 'M684 456 L840 440 L870 470 L742 492 L684 520 Z', label: [766, 466], pulse: [804, 466] },
+  { abbr: 'AL', name: 'Alabama', d: 'M734 492 L784 486 L806 570 L748 544 Z', label: [768, 528], pulse: [784, 532] },
+  { abbr: 'OH', name: 'Ohio', d: 'M762 292 L826 282 L852 354 L774 386 Z', label: [812, 340], pulse: [830, 344] },
+  { abbr: 'GA', name: 'Georgia', d: 'M790 488 L846 478 L890 552 L806 570 Z', label: [836, 526], pulse: [856, 532] },
+  { abbr: 'FL', name: 'Florida', d: 'M810 574 L892 558 L944 606 L918 640 L856 604 L812 600 Z', label: [878, 596], pulse: [902, 598] },
+  { abbr: 'WV', name: 'West Virginia', d: 'M826 360 L870 344 L902 384 L872 402 L838 436 L806 380 Z', label: [858, 386], pulse: [874, 386] },
+  { abbr: 'VA', name: 'Virginia', d: 'M874 406 L930 382 L960 420 L904 452 L842 438 Z', label: [904, 420], pulse: [930, 420] },
+  { abbr: 'NC', name: 'North Carolina', d: 'M846 444 L956 426 L990 462 L918 492 L844 470 Z', label: [914, 458], pulse: [950, 458] },
+  { abbr: 'SC', name: 'South Carolina', d: 'M848 480 L914 492 L890 552 Z', label: [884, 512], pulse: [896, 514] },
+  { abbr: 'PA', name: 'Pennsylvania', d: 'M830 282 L922 268 L950 324 L856 354 Z', label: [886, 314], pulse: [914, 316] },
+  { abbr: 'NY', name: 'New York', d: 'M828 230 L918 216 L980 248 L954 294 L922 268 L830 282 Z', label: [902, 252], pulse: [934, 252] },
+  { abbr: 'VT', name: 'Vermont', d: 'M930 170 L954 166 L962 218 L934 224 Z', label: [946, 198], pulse: [954, 202] },
+  { abbr: 'NH', name: 'New Hampshire', d: 'M958 164 L984 172 L986 228 L964 220 Z', label: [974, 198], pulse: [980, 202] },
+  { abbr: 'ME', name: 'Maine', d: 'M986 138 L1038 168 L1026 232 L990 226 L986 172 Z', label: [1014, 190], pulse: [1024, 192] },
+  { abbr: 'MA', name: 'Massachusetts', d: 'M936 228 L994 232 L1034 246 L1010 266 L952 248 Z', label: [982, 244], pulse: [1006, 248] },
+  { abbr: 'RI', name: 'Rhode Island', d: 'M998 266 L1014 268 L1010 286 L996 282 Z', label: [1008, 284], pulse: [1008, 276] },
+  { abbr: 'CT', name: 'Connecticut', d: 'M950 252 L994 266 L992 286 L948 278 Z', label: [970, 272], pulse: [984, 274] },
+  { abbr: 'NJ', name: 'New Jersey', d: 'M928 294 L952 298 L946 344 L924 326 Z', label: [940, 320], pulse: [946, 324] },
+  { abbr: 'DE', name: 'Delaware', d: 'M934 348 L950 350 L954 386 L936 378 Z', label: [948, 368], pulse: [950, 370] },
+  { abbr: 'MD', name: 'Maryland', d: 'M870 356 L932 348 L936 378 L902 384 Z', label: [906, 370], pulse: [926, 370] },
+  { abbr: 'DC', name: 'District of Columbia', d: 'M920 386 m-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0', label: [922, 398], pulse: [920, 386] },
+  { abbr: 'AK', name: 'Alaska', d: 'M86 520 L178 500 L224 548 L184 598 L92 588 L44 548 Z', label: [136, 550], pulse: [166, 550] },
+  { abbr: 'HI', name: 'Hawaii', d: 'M258 566 L272 560 L284 570 L270 580 Z M300 582 L316 576 L328 588 L312 598 Z M346 600 L362 592 L380 604 L366 614 Z', label: [318, 604], pulse: [350, 600] }
+];
+
+const abbreviationToState = Object.fromEntries(states.map(([name, abbreviation]) => [abbreviation, name]));
+const stateToAbbreviation = Object.fromEntries(states.map(([name, abbreviation]) => [name, abbreviation]));
+
+const pipelineHeatMapCapacityMw = {
+  Alabama: 0,
+  Alaska: 0,
+  Arizona: 500,
+  Arkansas: 0,
+  California: 300,
+  Colorado: 100,
+  Connecticut: 0,
+  Delaware: 0,
+  Florida: 300,
+  Georgia: 400,
+  Hawaii: 0,
+  Idaho: 0,
+  Illinois: 300,
+  Indiana: 300,
+  Iowa: 200,
+  Kansas: 100,
+  Kentucky: 1182,
+  Louisiana: 0,
+  Maine: 0,
+  Maryland: 200,
+  Massachusetts: 150,
+  Michigan: 2000,
+  Minnesota: 1000,
+  Mississippi: 500,
+  Missouri: 3000,
+  Montana: 3000,
+  Nebraska: 2500,
+  Nevada: 1000,
+  'New Hampshire': 150,
+  'New Jersey': 700,
+  'New Mexico': 5000,
+  'New York': 500,
+  'North Carolina': 1000,
+  'North Dakota': 1000,
+  Ohio: 2000,
+  Oklahoma: 2500,
+  Oregon: 1500,
+  Pennsylvania: 2000,
+  'Rhode Island': 0,
+  'South Carolina': 1000,
+  'South Dakota': 300,
+  Tennessee: 350,
+  Texas: 10650,
+  Utah: 500,
+  Vermont: 0,
+  Virginia: 3000,
+  Washington: 1648,
+  'West Virginia': 10120,
+  Wisconsin: 1117,
+  Wyoming: 2000,
+  'District of Columbia': 0
+};
+
+const stateHeatMapCoordinates = {
+  Alabama: { abbr: 'AL', lat: 32.8067, lng: -86.7113, capital: 'Montgomery', capitalLat: 32.3792, capitalLng: -86.3077, region: 'Southeast' },
+  Alaska: { abbr: 'AK', lat: 64.0685, lng: -152.2782, capital: 'Juneau', capitalLat: 58.3019, capitalLng: -134.4197, region: 'North Pacific' },
+  Arizona: { abbr: 'AZ', lat: 34.7298, lng: -111.4312, capital: 'Phoenix', capitalLat: 33.4484, capitalLng: -112.0742, region: 'Southwest' },
+  Arkansas: { abbr: 'AR', lat: 34.7465, lng: -92.3731, capital: 'Little Rock', capitalLat: 34.7465, capitalLng: -92.2896, region: 'South Central' },
+  California: { abbr: 'CA', lat: 37.0842, lng: -119.2674, capital: 'Sacramento', capitalLat: 38.5816, capitalLng: -121.4944, region: 'West Coast' },
+  Colorado: { abbr: 'CO', lat: 39.0598, lng: -105.3111, capital: 'Denver', capitalLat: 39.7392, capitalLng: -104.9903, region: 'Rocky Mountain' },
+  Connecticut: { abbr: 'CT', lat: 41.6032, lng: -72.7554, capital: 'Hartford', capitalLat: 41.7658, capitalLng: -72.6734, region: 'Northeast' },
+  Delaware: { abbr: 'DE', lat: 39.0582, lng: -75.5244, capital: 'Dover', capitalLat: 39.1582, capitalLng: -75.5244, region: 'Mid-Atlantic' },
+  Florida: { abbr: 'FL', lat: 27.6648, lng: -81.5158, capital: 'Tallahassee', capitalLat: 30.4383, capitalLng: -84.2807, region: 'Southeast' },
+  Georgia: { abbr: 'GA', lat: 33.0406, lng: -83.6431, capital: 'Atlanta', capitalLat: 33.7490, capitalLng: -84.3880, region: 'Southeast' },
+  Hawaii: { abbr: 'HI', lat: 21.1458, lng: -157.5000, capital: 'Honolulu', capitalLat: 21.3099, capitalLng: -157.8581, region: 'Pacific' },
+  Idaho: { abbr: 'ID', lat: 44.2405, lng: -114.0093, capital: 'Boise', capitalLat: 43.6150, capitalLng: -116.2023, region: 'Northwest' },
+  Illinois: { abbr: 'IL', lat: 40.3495, lng: -88.9861, capital: 'Springfield', capitalLat: 39.7817, capitalLng: -89.6501, region: 'Midwest' },
+  Indiana: { abbr: 'IN', lat: 40.2672, lng: -86.1349, capital: 'Indianapolis', capitalLat: 39.7684, capitalLng: -86.1581, region: 'Midwest' },
+  Iowa: { abbr: 'IA', lat: 42.0115, lng: -93.2105, capital: 'Des Moines', capitalLat: 41.5868, capitalLng: -93.6250, region: 'Midwest' },
+  Kansas: { abbr: 'KS', lat: 38.5266, lng: -96.7265, capital: 'Topeka', capitalLat: 39.0473, capitalLng: -95.6752, region: 'Great Plains' },
+  Kentucky: { abbr: 'KY', lat: 37.6681, lng: -84.6701, capital: 'Frankfort', capitalLat: 38.2009, capitalLng: -84.8733, region: 'South Central' },
+  Louisiana: { abbr: 'LA', lat: 31.0689, lng: -91.9623, capital: 'Baton Rouge', capitalLat: 30.4515, capitalLng: -91.1871, region: 'South Central' },
+  Maine: { abbr: 'ME', lat: 45.6945, lng: -68.3808, capital: 'Augusta', capitalLat: 44.3106, capitalLng: -69.7795, region: 'Northeast' },
+  Maryland: { abbr: 'MD', lat: 39.0639, lng: -76.8021, capital: 'Annapolis', capitalLat: 38.9784, capitalLng: -76.4922, region: 'Mid-Atlantic' },
+  Massachusetts: { abbr: 'MA', lat: 42.2352, lng: -71.5301, capital: 'Boston', capitalLat: 42.3601, capitalLng: -71.0589, region: 'Northeast' },
+  Michigan: { abbr: 'MI', lat: 45.6418, lng: -85.5301, capital: 'Lansing', capitalLat: 42.7335, capitalLng: -84.5555, region: 'Midwest' },
+  Minnesota: { abbr: 'MN', lat: 46.0729, lng: -94.6361, capital: 'Saint Paul', capitalLat: 44.9537, capitalLng: -93.0900, region: 'Upper Midwest' },
+  Mississippi: { abbr: 'MS', lat: 32.7416, lng: -89.6787, capital: 'Jackson', capitalLat: 32.2988, capitalLng: -90.1848, region: 'South Central' },
+  Missouri: { abbr: 'MO', lat: 38.4561, lng: -92.2884, capital: 'Jefferson City', capitalLat: 38.5767, capitalLng: -92.1735, region: 'Midwest' },
+  Montana: { abbr: 'MT', lat: 47.0527, lng: -109.6333, capital: 'Helena', capitalLat: 46.5891, capitalLng: -112.0391, region: 'Northwest' },
+  Nebraska: { abbr: 'NE', lat: 41.4925, lng: -99.9018, capital: 'Lincoln', capitalLat: 40.8258, capitalLng: -96.6852, region: 'Great Plains' },
+  Nevada: { abbr: 'NV', lat: 39.8026, lng: -116.4194, capital: 'Carson City', capitalLat: 39.1638, capitalLng: -119.7674, region: 'Southwest' },
+  'New Hampshire': { abbr: 'NH', lat: 43.4525, lng: -71.3187, capital: 'Concord', capitalLat: 43.2081, capitalLng: -71.5376, region: 'Northeast' },
+  'New Jersey': { abbr: 'NJ', lat: 40.2206, lng: -74.4597, capital: 'Trenton', capitalLat: 40.2206, capitalLng: -74.7597, region: 'Mid-Atlantic' },
+  'New Mexico': { abbr: 'NM', lat: 34.8405, lng: -106.2371, capital: 'Santa Fe', capitalLat: 35.0853, capitalLng: -106.6504, region: 'Southwest' },
+  'New York': { abbr: 'NY', lat: 43.2814, lng: -75.5007, capital: 'Albany', capitalLat: 42.6526, capitalLng: -73.7562, region: 'Northeast' },
+  'North Carolina': { abbr: 'NC', lat: 35.6301, lng: -79.8064, capital: 'Raleigh', capitalLat: 35.7796, capitalLng: -78.6382, region: 'Southeast' },
+  'North Dakota': { abbr: 'ND', lat: 47.5289, lng: -99.7840, capital: 'Bismarck', capitalLat: 46.8083, capitalLng: -100.7837, region: 'Upper Great Plains' },
+  Ohio: { abbr: 'OH', lat: 40.3888, lng: -82.7649, capital: 'Columbus', capitalLat: 39.9612, capitalLng: -82.9988, region: 'Midwest' },
+  Oklahoma: { abbr: 'OK', lat: 35.5653, lng: -97.4867, capital: 'Oklahoma City', capitalLat: 35.4676, capitalLng: -97.5164, region: 'South Central' },
+  Oregon: { abbr: 'OR', lat: 43.7795, lng: -120.5542, capital: 'Salem', capitalLat: 44.9429, capitalLng: -123.0351, region: 'Pacific Northwest' },
+  Pennsylvania: { abbr: 'PA', lat: 40.5908, lng: -77.2098, capital: 'Harrisburg', capitalLat: 40.2732, capitalLng: -76.8867, region: 'Mid-Atlantic' },
+  'Rhode Island': { abbr: 'RI', lat: 41.6809, lng: -71.5118, capital: 'Providence', capitalLat: 41.8240, capitalLng: -71.4128, region: 'Northeast' },
+  'South Carolina': { abbr: 'SC', lat: 33.8361, lng: -80.9066, capital: 'Columbia', capitalLat: 34.0007, capitalLng: -81.0348, region: 'Southeast' },
+  'South Dakota': { abbr: 'SD', lat: 44.2998, lng: -99.4388, capital: 'Pierre', capitalLat: 44.3683, capitalLng: -100.3364, region: 'Great Plains' },
+  Tennessee: { abbr: 'TN', lat: 35.7478, lng: -86.7234, capital: 'Nashville', capitalLat: 36.1627, capitalLng: -86.7816, region: 'Southeast' },
+  Texas: { abbr: 'TX', lat: 31.9686, lng: -99.9018, capital: 'Austin', capitalLat: 30.2672, capitalLng: -97.7431, region: 'South Central' },
+  Utah: { abbr: 'UT', lat: 39.3210, lng: -111.0937, capital: 'Salt Lake City', capitalLat: 40.7608, capitalLng: -111.8910, region: 'Rocky Mountain' },
+  Vermont: { abbr: 'VT', lat: 43.9695, lng: -72.7107, capital: 'Montpelier', capitalLat: 44.2601, capitalLng: -72.5754, region: 'Northeast' },
+  Virginia: { abbr: 'VA', lat: 37.7693, lng: -78.1694, capital: 'Richmond', capitalLat: 37.5407, capitalLng: -77.4360, region: 'Southeast' },
+  Washington: { abbr: 'WA', lat: 47.7511, lng: -120.7401, capital: 'Olympia', capitalLat: 47.0379, capitalLng: -122.9007, region: 'Pacific Northwest' },
+  'West Virginia': { abbr: 'WV', lat: 38.8026, lng: -80.9545, capital: 'Charleston', capitalLat: 38.3498, capitalLng: -81.6326, region: 'Southeast' },
+  Wisconsin: { abbr: 'WI', lat: 44.2901, lng: -89.6165, capital: 'Madison', capitalLat: 43.0731, capitalLng: -89.4012, region: 'Upper Midwest' },
+  Wyoming: { abbr: 'WY', lat: 42.7559, lng: -107.3025, capital: 'Cheyenne', capitalLat: 41.1400, capitalLng: -104.8202, region: 'Rocky Mountain' }
+};
+
+const scoreFromLevel = (level) => {
+  const text = String(level || '').toLowerCase();
+  if (!text) return null;
+  if (text.includes('extreme') || text.includes('critical') || text.includes('severe')) return 88;
+  if (text.includes('high')) return 68;
+  if (text.includes('moderate') || text.includes('medium')) return 42;
+  if (text.includes('low') || text.includes('minimal')) return 18;
+  return null;
+};
+
+const scoreFromJobs = (impact) => {
+  if (!impact) return null;
+  const lost = parseRangeNumber(impact.jobsLost || impact.lostJobs || impact.displacedJobs || impact.atRiskJobs);
+  const created = parseRangeNumber(impact.jobsCreated || impact.createdJobs || impact.newJobs);
+  if (lost === null && created === null) return null;
+  if (lost !== null && created !== null) return clampScore((lost / Math.max(1, lost + created)) * 100);
+  if (lost !== null) return clampScore(Math.min(100, lost / 10000));
+  return null;
+};
+
+const heatColor = (score) => {
+  if (score === null || score === undefined) return { background: '#334155', color: '#94a3b8', border: '#475569', glow: 'rgba(148,163,184,0.18)', label: 'No data' };
+  if (score <= 20) return { background: '#2563eb', color: '#bfdbfe', border: '#60a5fa', glow: 'rgba(37,99,235,0.5)', label: 'Low' };
+  if (score <= 50) return { background: '#06b6d4', color: '#cffafe', border: '#67e8f9', glow: 'rgba(6,182,212,0.52)', label: 'Moderate' };
+  if (score <= 75) return { background: '#f59e0b', color: '#ffedd5', border: '#fbbf24', glow: 'rgba(245,158,11,0.54)', label: 'High' };
+  return { background: '#ef4444', color: '#fee2e2', border: '#fca5a5', glow: 'rgba(239,68,68,0.6)', label: 'Extreme' };
+};
+
+const scoreFromPipelineMw = (mw) => {
+  const value = parseRangeNumber(mw);
+  if (value === null) return null;
+  if (value <= 0) return 0;
+  if (value <= 300) return clampScore((value / 300) * 20);
+  if (value <= 1000) return clampScore(21 + ((value - 300) / 700) * 29);
+  if (value <= 2500) return clampScore(51 + ((value - 1000) / 1500) * 24);
+  return clampScore(76 + Math.min(24, ((value - 2500) / 8150) * 24));
+};
+
+const pipelineCapacityMwForRecord = (record) => {
+  if (!record) return null;
+  const dedicated = record.pipelineHeatMapValueMw ?? pipelineHeatMapCapacityMw[record.state];
+  if (dedicated !== undefined && dedicated !== null) return parseRangeNumber(dedicated);
+  const planned = parseRangeNumber(record.totalPlannedDataCenters ?? record.plannedDataCenters);
+  const underConstruction = parseRangeNumber(record.totalUnderConstructionDataCenters ?? record.underConstructionDataCenters);
+  const values = [planned, underConstruction].filter((value) => value !== null);
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0);
+};
+
+const calculateHeatScore = (record, mode) => {
+  if (!record) return { score: null, raw: null };
+  const density = parseRangeNumber(record.totalDataCenters);
+  const planned = parseRangeNumber(record.totalPlannedDataCenters ?? record.plannedDataCenters);
+  const underConstruction = parseRangeNumber(record.totalUnderConstructionDataCenters ?? record.underConstructionDataCenters);
+  const pipelineRaw = [planned, underConstruction].filter((value) => value !== null).reduce((sum, value) => sum + value, 0);
+  const hasPipeline = planned !== null || underConstruction !== null;
+  const pipelineMw = pipelineCapacityMwForRecord(record);
+  const pipelineMwScore = scoreFromPipelineMw(pipelineMw);
+
+  if (mode === 'density') return { score: clampScore(density), raw: density };
+  if (mode === 'pipeline') return { score: pipelineMwScore, raw: pipelineMw };
+
+  const gridStressScore = record.gridStressScore ?? scoreFromLevel(record.gridPressureLevel);
+  const waterStressScore = record.waterStressScore ?? scoreFromLevel(record.waterImpactLevel);
+  const jobExposureScore = record.jobExposureScore ?? scoreFromJobs(record.aiJobsImpact);
+  const pipelineScore = record.pipelineScore ?? pipelineMwScore ?? (hasPipeline ? clampScore(pipelineRaw) : null);
+  const scores = [gridStressScore, waterStressScore, jobExposureScore, pipelineScore]
+    .map((value) => clampScore(value))
+    .filter((value) => value !== null);
+  if (!scores.length) return { score: null, raw: null };
+  const average = scores.reduce((sum, value) => sum + value, 0) / scores.length;
+  return { score: clampScore(average), raw: average };
+};
+
+const heatTakeaway = (record, mode, score) => {
+  if (!record || score === null || score === undefined) return 'Insufficient reviewed state intelligence for this mode.';
+  const band = heatColor(score).label.toLowerCase();
+  if (mode === 'density') return `${band} modeled concentration based on available data center counts.`;
+  if (mode === 'pipeline') {
+    const pipelineMw = pipelineCapacityMwForRecord(record);
+    const capacityText = pipelineMw === null ? 'available pipeline inventory' : `${pipelineMw.toLocaleString('en-US')} MW visible pipeline`;
+    return `${band} modeled growth signal based on ${capacityText}.`;
+  }
+  return `${band} modeled risk from available grid, water, workforce, and pipeline signals.`;
+};
+
+const USHeatMap = ({ records, selectedState, onSelectState }) => {
+  const [mode, setMode] = useState('density');
+  const [hoveredState, setHoveredState] = useState(null);
+  const recordByState = useMemo(() => Object.fromEntries((records || []).map((record) => [record.state, record])), [records]);
+  const activeMode = heatMapModes[mode];
+  const selectedAbbreviation = stateToAbbreviation[selectedState];
+  const activeTooltipState = hoveredState || selectedState;
+  const activeTooltipRecord = activeTooltipState ? recordByState[activeTooltipState] : null;
+  const activeTooltipScore = activeTooltipRecord ? calculateHeatScore(activeTooltipRecord, mode).score : null;
+  const activeTooltipColor = heatColor(activeTooltipScore);
+  const activeCoordinates = stateHeatMapCoordinates[activeTooltipState];
+
+  return (
+    <div style={{ ...panel, overflow: 'hidden', background: 'linear-gradient(135deg, rgba(7,26,51,0.98), rgba(10,31,61,0.96))', borderColor: 'rgba(96,165,250,0.28)', boxShadow: '0 30px 90px rgba(4,14,31,0.22)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', padding: '1rem 1.15rem', borderBottom: '1px solid #dce8f3', flexWrap: 'wrap' }}>
+        <div>
+          <p style={{ margin: '0 0 0.35rem', color: '#93c5fd', fontSize: '0.72rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Modeled U.S. Heat Map</p>
+          <h2 style={{ margin: 0, color: '#f8fbff', fontSize: '1.35rem', lineHeight: 1.15 }}>{activeMode.title}</h2>
+          <p style={{ margin: '0.45rem 0 0', color: '#bfd4f4', fontSize: '0.86rem', fontWeight: 750 }}>Modeled heat map based on currently available state intelligence data.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {Object.entries(heatMapModes).map(([key, item]) => (
+            <button key={key} type="button" onClick={() => setMode(key)} style={{ minHeight: 38, border: `1px solid ${mode === key ? '#67e8f9' : 'rgba(148,163,184,0.32)'}`, borderRadius: 999, background: mode === key ? 'linear-gradient(135deg, #0d6efd, #7c3aed)' : 'rgba(255,255,255,0.08)', color: mode === key ? '#fff' : '#dbeafe', padding: '0 0.82rem', fontSize: '0.78rem', fontWeight: 950, cursor: 'pointer', fontFamily: 'inherit', boxShadow: mode === key ? '0 12px 28px rgba(6,182,212,0.22)' : '0 8px 18px rgba(0,0,0,0.12)' }}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ position: 'relative', padding: '1rem' }}>
+        <div style={{ position: 'relative', minHeight: 460, border: '1px solid rgba(148,163,184,0.18)', borderRadius: 18, overflow: 'hidden', background: 'radial-gradient(circle at 22% 18%, rgba(6,182,212,0.18), transparent 28%), radial-gradient(circle at 80% 26%, rgba(124,58,237,0.16), transparent 28%), linear-gradient(135deg, rgba(6,17,35,0.96), rgba(10,31,61,0.9))' }}>
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(148,163,184,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.09) 1px, transparent 1px)', backgroundSize: '34px 34px', opacity: 0.42 }} />
+          <svg role="img" aria-label={`${activeMode.title} modeled U.S. heat map`} viewBox="0 0 1080 680" preserveAspectRatio="xMidYMid meet" style={{ position: 'relative', zIndex: 1, width: '100%', minWidth: 760, height: '100%', minHeight: 460, display: 'block' }}>
+            <defs>
+              <filter id="aiStateGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="5" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <linearGradient id="aiHeatLegendGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2563eb" />
+                <stop offset="34%" stopColor="#06b6d4" />
+                <stop offset="68%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </linearGradient>
+            </defs>
+            {usStateShapes.map((shape) => {
+              const record = recordByState[shape.name];
+              const { score } = calculateHeatScore(record, mode);
+              const colors = heatColor(score);
+              const isActive = selectedAbbreviation === shape.abbr;
+              const isHovered = hoveredState === shape.name;
+              const highActivity = score !== null && score >= 76;
+              const canonicalStateName = normalizeStateName(shape.name) || abbreviationToState[shape.abbr] || shape.name;
+              return (
+                <g key={shape.abbr} onMouseEnter={() => setHoveredState(canonicalStateName)} onMouseLeave={() => setHoveredState(null)} onClick={() => onSelectState(canonicalStateName)} style={{ cursor: 'pointer' }}>
+                  <path
+                    className="us-state-shape"
+                    d={shape.d}
+                    fill={colors.background}
+                    stroke={isActive || isHovered ? '#f8fbff' : 'rgba(226,232,240,0.64)'}
+                    strokeWidth={isActive || isHovered ? 2.4 : 1}
+                    filter={isHovered || isActive ? 'url(#aiStateGlow)' : 'none'}
+                    opacity={score === null || score === undefined ? 0.62 : 0.9}
+                    style={{ '--state-glow': colors.glow, transformOrigin: `${shape.label[0]}px ${shape.label[1]}px` }}
+                  />
+                  {highActivity && (
+                    <circle className="ai-heat-pulse" cx={shape.pulse[0]} cy={shape.pulse[1]} r="7" fill={colors.border} opacity="0.85" />
+                  )}
+                  <text x={shape.label[0]} y={shape.label[1]} textAnchor="middle" dominantBaseline="middle" fill="#f8fbff" fontSize="13" fontWeight="950" pointerEvents="none" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>
+                    {shape.abbr}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+          <aside className="ai-heat-tooltip" style={{ position: 'absolute', zIndex: 2, right: 18, top: 18, width: 278, maxWidth: 'calc(100% - 36px)', border: `1px solid ${activeTooltipColor.border}`, borderRadius: 18, background: 'rgba(7,26,51,0.78)', backdropFilter: 'blur(16px)', boxShadow: `0 22px 54px ${activeTooltipColor.glow}`, padding: '1rem' }}>
+            <p style={{ margin: 0, color: '#93c5fd', fontSize: '0.7rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Floating Tooltip</p>
+            <h3 style={{ margin: '0.45rem 0 0', color: '#fff', fontSize: '1.08rem', lineHeight: 1.2 }}>{activeTooltipState}</h3>
+            <p style={{ margin: '0.4rem 0 0', color: '#dbeafe', fontSize: '0.84rem', fontWeight: 850 }}>{activeMode.title}</p>
+            <strong style={{ display: 'block', marginTop: '0.7rem', color: activeTooltipColor.border, fontSize: '2rem', lineHeight: 1 }}>
+              {activeTooltipScore ?? 'N/A'}
+            </strong>
+            {mode === 'pipeline' && activeTooltipRecord && (
+              <span style={{ display: 'block', marginTop: '0.32rem', color: '#dbeafe', fontSize: '0.76rem', fontWeight: 900 }}>
+                {pipelineCapacityMwForRecord(activeTooltipRecord)?.toLocaleString('en-US') ?? 'N/A'} MW visible pipeline
+              </span>
+            )}
+            {activeCoordinates && (
+              <span style={{ display: 'block', marginTop: '0.32rem', color: '#93c5fd', fontSize: '0.72rem', fontWeight: 850 }}>
+                {activeCoordinates.region} · {activeCoordinates.capital} · {activeCoordinates.lat.toFixed(2)}, {activeCoordinates.lng.toFixed(2)}
+              </span>
+            )}
+            <p style={{ margin: '0.55rem 0 0', color: '#c7d2fe', fontSize: '0.82rem', lineHeight: 1.48, fontWeight: 750 }}>
+              {heatTakeaway(activeTooltipRecord, mode, activeTooltipScore)}
+            </p>
+          </aside>
+        </div>
+        <div aria-label="continuous gradient legend bar" style={{ display: 'grid', gap: '0.45rem', marginTop: '0.9rem' }}>
+          <div style={{ height: 12, borderRadius: 999, background: 'linear-gradient(90deg, #2563eb 0%, #06b6d4 34%, #f59e0b 68%, #ef4444 100%)', boxShadow: '0 10px 26px rgba(6,182,212,0.18)' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', color: '#dbeafe', fontSize: '0.76rem', fontWeight: 900, flexWrap: 'wrap' }}>
+            <span>0-20 Low</span>
+            <span>21-50 Moderate</span>
+            <span>51-75 High</span>
+            <span>76-100 Extreme</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SubscriptionLockPanel = ({ onUnlock, onPreviewPlans }) => (
+  <section style={{ ...panel, padding: 0, overflow: 'hidden', marginBottom: '1.4rem', border: '1px solid #cfe0ff', background: 'linear-gradient(135deg, #f7fbff 0%, #ffffff 45%, #f3f0ff 100%)', boxShadow: '0 32px 90px rgba(18, 69, 145, 0.16)' }}>
+    <div className="ai-subscription-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.45fr) minmax(340px, 0.95fr)', gap: 0 }}>
+      <div style={{ position: 'relative', overflow: 'hidden', padding: '2.2rem', background: 'radial-gradient(circle at 12% 12%, rgba(13,110,253,0.16), transparent 32%), radial-gradient(circle at 78% 18%, rgba(124,58,237,0.13), transparent 30%), linear-gradient(135deg, #ffffff 0%, #f5faff 100%)' }}>
+        <div style={{ position: 'absolute', right: 34, top: 26, width: 164, height: 118, borderRadius: 28, border: '1px solid rgba(13,110,253,0.18)', background: 'linear-gradient(135deg, rgba(255,255,255,0.55), rgba(13,110,253,0.08))', filter: 'blur(0.1px)', transform: 'rotate(-8deg)' }} />
+        <div style={{ position: 'relative', display: 'inline-flex', flexWrap: 'wrap', gap: '0.55rem', marginBottom: '1rem' }}>
+          {['Live State Tracking', 'Updated Monthly', 'Infrastructure Intelligence', 'Economic Risk Forecasting'].map((badge) => (
+            <span key={badge} style={{ border: '1px solid #cfe0ff', borderRadius: 999, background: 'rgba(255,255,255,0.72)', color: '#0d4ea6', padding: '0.42rem 0.72rem', fontSize: '0.72rem', fontWeight: 950, boxShadow: '0 10px 24px rgba(13,110,253,0.08)', backdropFilter: 'blur(10px)' }}>{badge}</span>
+          ))}
+        </div>
+        <h2 style={{ position: 'relative', margin: '0 0 0.8rem', color: '#071a33', fontSize: 'clamp(2.4rem, 4vw, 3.65rem)', lineHeight: 0.98, letterSpacing: 0 }}>
+          Unlock Full AI State Intelligence
+        </h2>
+        <p style={{ position: 'relative', margin: 0, color: '#405a78', fontSize: '1.08rem', lineHeight: 1.65, maxWidth: 850 }}>
+          Track how AI infrastructure is reshaping jobs, energy demand, housing pressure, taxes, and economic resilience across all 50 states.
+        </p>
+        <p style={{ position: 'relative', margin: '0.9rem 0 0', color: '#18395f', fontSize: '0.95rem', fontWeight: 900 }}>
+          Here is the intelligence you are missing.
+        </p>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.75rem', marginTop: '1rem' }}>
+          <MiniSignalCard label="Infrastructure preview" value="Facility status layers" accent="#0d6efd" type="heatmap" />
+          <MiniSignalCard label="AI risk visual" value="Risk pressure index" accent="#7c3aed" type="risk" />
+          <MiniSignalCard label="Economic forecast" value="12-month trendline" accent="#06b6d4" type="trend" />
+        </div>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.8rem', marginTop: '1.25rem' }}>
+          <PricingPreview title="Monthly Intelligence Access" price="$1" note="7 day trial" />
+          <PricingPreview title="Annual Intelligence Access" price="$149/year" featured />
+        </div>
+        <p style={{ position: 'relative', margin: '0.55rem 0 0', color: '#6b7d91', fontSize: '0.78rem', fontStyle: 'italic', fontWeight: 650, lineHeight: 1.45 }}>
+          Your card will be charged $19/month after your 7-day trial ends unless you cancel before renewal.
+        </p>
+        <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '1.35rem' }}>
+          <button type="button" onClick={onUnlock} style={{ minHeight: 50, border: 0, borderRadius: 11, background: 'linear-gradient(135deg, #0d6efd, #6d5dfc)', color: '#fff', textDecoration: 'none', display: 'inline-grid', placeItems: 'center', padding: '0 1.2rem', fontSize: '0.94rem', fontWeight: 950, boxShadow: '0 16px 34px rgba(13, 110, 253, 0.25)', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Unlock Full Intelligence
+          </button>
+          <button type="button" onClick={onPreviewPlans} style={{ minHeight: 50, borderRadius: 11, background: 'rgba(255,255,255,0.82)', color: '#0d315f', border: '1px solid #cddceb', textDecoration: 'none', display: 'inline-grid', placeItems: 'center', padding: '0 1.2rem', fontSize: '0.94rem', fontWeight: 950, boxShadow: '0 10px 26px rgba(18,38,63,0.07)', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Preview Plans
+          </button>
+        </div>
+        <p style={{ position: 'relative', margin: '0.85rem 0 0', color: '#5d6f88', fontSize: '0.86rem', fontWeight: 750 }}>
+          Access every state forecast, downloadable reports, infrastructure risk modeling, and economic impact projections.
+        </p>
+        <div style={{ position: 'relative', marginTop: '1.35rem', borderTop: '1px solid #dce8f3', paddingTop: '1rem' }}>
+          <p style={{ margin: '0 0 0.65rem', color: '#6b7d91', fontSize: '0.74rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Used for</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
+            {proofItems.map((item) => <span key={item} style={{ borderRadius: 9, background: '#edf5ff', color: '#24466d', padding: '0.48rem 0.68rem', fontSize: '0.8rem', fontWeight: 900 }}>{item}</span>)}
+          </div>
+        </div>
+      </div>
+      <div style={{ position: 'relative', padding: '1.2rem', background: 'linear-gradient(180deg, #0d1f3a 0%, #123a66 100%)', color: '#fff' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 20% 0%, rgba(0,212,255,0.22), transparent 32%), radial-gradient(circle at 100% 28%, rgba(124,58,237,0.28), transparent 34%)' }} />
+        <div style={{ position: 'relative', display: 'grid', gap: '0.85rem' }}>
+          {lockedIntelligencePreviews.map((preview) => <LockedPreviewCard key={preview.title} {...preview} />)}
+        </div>
+      </div>
+    </div>
+    <div style={{ borderTop: '1px solid #dce8f3', background: 'rgba(255,255,255,0.74)', padding: '1.25rem 1.4rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.9rem' }}>
+        {unlockTimeline.map((item, index) => (
+          <article key={item.title} style={{ border: '1px solid #dce8f3', borderRadius: 12, background: '#fff', padding: '1rem', boxShadow: '0 12px 28px rgba(18, 38, 63, 0.05)' }}>
+            <span style={{ width: 34, height: 34, borderRadius: 10, background: '#edf5ff', color: '#0d6efd', display: 'grid', placeItems: 'center', fontWeight: 950, marginBottom: '0.7rem' }}>{index + 1}</span>
+            <strong style={{ display: 'block', color: '#102643', fontSize: '0.95rem', marginBottom: '0.35rem' }}>{item.title}</strong>
+            <span style={{ color: '#5d6f88', fontSize: '0.84rem', lineHeight: 1.45, fontWeight: 700 }}>{item.text}</span>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const PricingPreview = ({ title, price, note, featured = false }) => (
+  <article style={{ border: `1px solid ${featured ? '#98bfff' : '#dce8f3'}`, borderRadius: 12, background: featured ? 'linear-gradient(135deg, #ffffff, #eef5ff)' : 'rgba(255,255,255,0.82)', padding: '1rem', boxShadow: featured ? '0 16px 34px rgba(13,110,253,0.13)' : '0 10px 24px rgba(18,38,63,0.06)' }}>
+    <span style={{ color: '#6b7d91', fontSize: '0.72rem', fontWeight: 950, textTransform: 'uppercase' }}>{title}</span>
+    <strong style={{ display: 'block', marginTop: '0.35rem', color: featured ? '#0d6efd' : '#071a33', fontSize: '1.45rem', lineHeight: 1 }}>{price}</strong>
+    {note && <span style={{ display: 'block', marginTop: '0.3rem', color: '#5d6f88', fontSize: '0.82rem', fontWeight: 850 }}>{note}</span>}
+  </article>
+);
+
+const MiniSignalCard = ({ label, value, accent, type }) => (
+  <article style={{ border: `1px solid ${accent}24`, borderRadius: 12, background: 'rgba(255,255,255,0.78)', padding: '0.9rem', boxShadow: `0 12px 28px ${accent}12`, display: 'grid', gridTemplateColumns: '54px minmax(0, 1fr)', gap: '0.75rem', alignItems: 'center', backdropFilter: 'blur(12px)' }}>
+    <div style={{ height: 48, borderRadius: 11, background: `${accent}12`, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+      {type === 'map' ? (
+        <svg viewBox="0 0 64 48" style={{ width: 50, height: 38 }}>
+          <path d="M9 24 C15 10 28 9 34 15 C41 8 54 15 54 27 C54 39 38 41 31 34 C23 42 8 37 9 24Z" fill={accent} opacity="0.18" />
+          <path d="M13 24 C18 15 28 14 33 19 C39 13 50 18 50 27 C50 35 38 36 32 31 C25 37 12 34 13 24Z" fill="none" stroke={accent} strokeWidth="3" />
+          <circle cx="39" cy="22" r="5" fill={accent} opacity="0.85" />
+        </svg>
+      ) : type === 'risk' ? (
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: `conic-gradient(${accent} 0 68%, #dce8f3 68% 100%)`, boxShadow: `0 0 18px ${accent}55` }} />
+      ) : (
+        <svg viewBox="0 0 64 48" style={{ width: 50, height: 38 }}>
+          <path d="M4 34 C15 30 20 37 30 27 C40 17 46 21 60 10" fill="none" stroke={accent} strokeWidth="4" strokeLinecap="round" />
+          <path d="M4 39 H60" stroke="#dce8f3" strokeWidth="2" />
+        </svg>
+      )}
+    </div>
+    <div>
+      <strong style={{ display: 'block', color: '#102643', fontSize: '0.84rem', lineHeight: 1.2 }}>{label}</strong>
+      <span style={{ display: 'block', marginTop: 4, color: '#5d6f88', fontSize: '0.74rem', fontWeight: 800 }}>{value}</span>
+    </div>
+  </article>
+);
+
+const getStateShapeBounds = (shape) => {
+  if (!shape) return { minX: 0, minY: 0, width: 320, height: 170, viewBox: '0 0 320 170' };
+  const values = shape.d.match(/-?\d+\.?\d*/g)?.map(Number) || [];
+  const xs = [];
+  const ys = [];
+  for (let index = 0; index < values.length; index += 2) {
+    xs.push(values[index]);
+    if (values[index + 1] !== undefined) ys.push(values[index + 1]);
+  }
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const padX = Math.max(22, (maxX - minX) * 0.2);
+  const padY = Math.max(18, (maxY - minY) * 0.24);
+  const width = (maxX - minX) + padX * 2;
+  const height = (maxY - minY) + padY * 2;
+  return { minX: minX - padX, minY: minY - padY, width, height, viewBox: `${minX - padX} ${minY - padY} ${width} ${height}` };
+};
+
+const hashText = (text) => String(text || '').split('').reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) % 9973, 17);
+
+const detailValue = (details, label) => {
+  const row = (details || []).find((item) => String(item).toLowerCase().startsWith(`${label.toLowerCase()}:`));
+  return row ? row.split(':').slice(1).join(':').trim() : null;
+};
+
+const metricNodeValue = (value) => {
+  if (value && typeof value === 'object' && 'value' in value) return value.value;
+  return value;
+};
+
+const knownLocationCoordinates = {
+  bridgeport: { lat: 34.9476, lng: -85.7144, label: 'Bridgeport' },
+  bessemer: { lat: 33.4018, lng: -86.9544, label: 'Bessemer' },
+  montgomery: { lat: 32.3792, lng: -86.3077, label: 'Montgomery' },
+  phoenix: { lat: 33.4484, lng: -112.0742, label: 'Phoenix' },
+  mesa: { lat: 33.4152, lng: -111.8315, label: 'Mesa' },
+  goodyear: { lat: 33.4353, lng: -112.3582, label: 'Goodyear' },
+  little_rock: { lat: 34.7465, lng: -92.2896, label: 'Little Rock' },
+  sacramento: { lat: 38.5816, lng: -121.4944, label: 'Sacramento' },
+  denver: { lat: 39.7392, lng: -104.9903, label: 'Denver' },
+  atlanta: { lat: 33.7490, lng: -84.3880, label: 'Atlanta' },
+  chicago: { lat: 41.8781, lng: -87.6298, label: 'Chicago' },
+  indianapolis: { lat: 39.7684, lng: -86.1581, label: 'Indianapolis' },
+  des_moines: { lat: 41.5868, lng: -93.6250, label: 'Des Moines' },
+  topeka: { lat: 39.0473, lng: -95.6752, label: 'Topeka' },
+  louisville: { lat: 38.2527, lng: -85.7585, label: 'Louisville' },
+  baton_rouge: { lat: 30.4515, lng: -91.1871, label: 'Baton Rouge' },
+  boston: { lat: 42.3601, lng: -71.0589, label: 'Boston' },
+  detroit: { lat: 42.3314, lng: -83.0458, label: 'Detroit' },
+  lansing: { lat: 42.7335, lng: -84.5555, label: 'Lansing' },
+  saint_paul: { lat: 44.9537, lng: -93.0900, label: 'Saint Paul' },
+  jackson: { lat: 32.2988, lng: -90.1848, label: 'Jackson' },
+  kansas_city: { lat: 39.0997, lng: -94.5786, label: 'Kansas City' },
+  jefferson_city: { lat: 38.5767, lng: -92.1735, label: 'Jefferson City' },
+  helena: { lat: 46.5891, lng: -112.0391, label: 'Helena' },
+  lincoln: { lat: 40.8258, lng: -96.6852, label: 'Lincoln' },
+  las_vegas: { lat: 36.1716, lng: -115.1391, label: 'Las Vegas' },
+  trenton: { lat: 40.2206, lng: -74.7597, label: 'Trenton' },
+  santa_fe: { lat: 35.0853, lng: -106.6504, label: 'Santa Fe' },
+  albany: { lat: 42.6526, lng: -73.7562, label: 'Albany' },
+  new_york: { lat: 40.7128, lng: -74.0060, label: 'New York City' },
+  raleigh: { lat: 35.7796, lng: -78.6382, label: 'Raleigh' },
+  bismarck: { lat: 46.8083, lng: -100.7837, label: 'Bismarck' },
+  columbus: { lat: 39.9612, lng: -82.9988, label: 'Columbus' },
+  oklahoma_city: { lat: 35.4676, lng: -97.5164, label: 'Oklahoma City' },
+  pryor: { lat: 36.3084, lng: -95.3169, label: 'Pryor' },
+  portland: { lat: 45.5152, lng: -122.6784, label: 'Portland' },
+  prineville: { lat: 44.2998, lng: -120.8345, label: 'Prineville' },
+  boardman: { lat: 45.8399, lng: -119.7006, label: 'Boardman' },
+  hillsboro: { lat: 45.5229, lng: -122.9898, label: 'Hillsboro' },
+  harrisburg: { lat: 40.2732, lng: -76.8867, label: 'Harrisburg' },
+  providence: { lat: 41.8240, lng: -71.4128, label: 'Providence' },
+  moncks_corner: { lat: 33.1960, lng: -80.0131, label: 'Moncks Corner' },
+  columbia: { lat: 34.0007, lng: -81.0348, label: 'Columbia' },
+  pierre: { lat: 44.3683, lng: -100.3364, label: 'Pierre' },
+  sioux_falls: { lat: 43.5446, lng: -96.7311, label: 'Sioux Falls' },
+  memphis: { lat: 35.1495, lng: -90.0490, label: 'Memphis' },
+  nashville: { lat: 36.1627, lng: -86.7816, label: 'Nashville' },
+  clarksville: { lat: 36.5298, lng: -87.3595, label: 'Clarksville' },
+  austin: { lat: 30.2672, lng: -97.7431, label: 'Austin' },
+  fort_worth: { lat: 32.7555, lng: -97.3308, label: 'Fort Worth' },
+  dallas: { lat: 32.7767, lng: -96.7970, label: 'Dallas' },
+  san_antonio: { lat: 29.4241, lng: -98.4936, label: 'San Antonio' },
+  houston: { lat: 29.7604, lng: -95.3698, label: 'Houston' },
+  salt_lake_city: { lat: 40.7608, lng: -111.8910, label: 'Salt Lake City' },
+  montpelier: { lat: 44.2601, lng: -72.5754, label: 'Montpelier' },
+  williston: { lat: 44.4376, lng: -73.0682, label: 'Williston' },
+  richmond: { lat: 37.5407, lng: -77.4360, label: 'Richmond' },
+  sandston: { lat: 37.5235, lng: -77.3158, label: 'Sandston' },
+  seattle: { lat: 47.6062, lng: -122.3321, label: 'Seattle' },
+  wenatchee: { lat: 47.4235, lng: -120.3103, label: 'Wenatchee' },
+  east_wenatchee: { lat: 47.4157, lng: -120.2931, label: 'East Wenatchee' },
+  charleston: { lat: 38.3498, lng: -81.6326, label: 'Charleston' },
+  south_charleston: { lat: 38.3684, lng: -81.6996, label: 'South Charleston' },
+  mount_pleasant: { lat: 42.7120, lng: -87.8876, label: 'Mount Pleasant' },
+  madison: { lat: 43.0731, lng: -89.4012, label: 'Madison' },
+  milwaukee: { lat: 43.0389, lng: -87.9065, label: 'Milwaukee' },
+  port_washington: { lat: 43.3872, lng: -87.8756, label: 'Port Washington' },
+  beaver_dam: { lat: 43.4578, lng: -88.8373, label: 'Beaver Dam' },
+  cheyenne: { lat: 41.1400, lng: -104.8202, label: 'Cheyenne' }
+};
+
+Object.values(stateHeatMapCoordinates).forEach((item) => {
+  knownLocationCoordinates[String(item.capital).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')] = {
+    lat: item.capitalLat,
+    lng: item.capitalLng,
+    label: item.capital
+  };
+});
+
+const dotStatusStyles = {
+  Operational: { color: '#06b6d4', label: 'Operational' },
+  Planned: { color: '#8b5cf6', label: 'Planned' },
+  'Under Construction': { color: '#f59e0b', label: 'Under Construction' },
+  Canceled: { color: '#ef4444', label: 'Canceled' },
+  Unknown: { color: '#94a3b8', label: 'Unknown' }
+};
+
+const parseStatus = (details = []) => {
+  const text = details.join(' ').toLowerCase();
+  if (text.includes('cancel') || text.includes('withdrawn') || text.includes('dead')) return 'Canceled';
+  if (text.includes('under construction') || text.includes('active construction') || text.includes('construction underway')) return 'Under Construction';
+  if (text.includes('planned') || text.includes('proposed') || text.includes('pre-construction') || text.includes('approved')) return 'Planned';
+  if (text.includes('operational') || text.includes('online')) return 'Operational';
+  return 'Unknown';
+};
+
+const parseCompany = (details = [], fallback = null) => detailValue(details, 'Developer') || detailValue(details, 'Company') || detailValue(details, 'Operator') || fallback || 'Not specified';
+const parseMw = (details = []) => detailValue(details, 'Power Capacity') || detailValue(details, 'Power') || null;
+
+const parseLatLngFromDetails = (details = []) => {
+  const text = details.join(' ');
+  const match = text.match(/(-?\d{1,2}\.\d+)\s*(?:°)?\s*[Nn]?[,\s]+(-?\d{1,3}\.\d+)\s*(?:°)?\s*[Ww]?/);
+  if (!match) return null;
+  const lat = Number(match[1]);
+  const lng = Number(match[2]) > 0 ? -Number(match[2]) : Number(match[2]);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, approximate: false, label: 'Exact coordinates' } : null;
+};
+
+const resolveLocationCoordinate = (location, details, stateName) => {
+  const exact = parseLatLngFromDetails(details);
+  if (exact) return exact;
+  const text = String(location || '').toLowerCase();
+  const key = Object.keys(knownLocationCoordinates).find((name) => text.includes(name.replace(/_/g, ' ')));
+  if (key) return { ...knownLocationCoordinates[key], approximate: true };
+  const stateCenter = stateHeatMapCoordinates[stateName];
+  if (location && stateCenter && (/county|area|region|state|site|park|campus|district|township/i).test(location)) {
+    return { lat: stateCenter.lat, lng: stateCenter.lng, label: `${stateName} geographic center`, approximate: true };
+  }
+  return null;
+};
+
+const latLngToStateSvgPoint = (lat, lng, stateName, bounds, shape) => {
+  const stateCenter = stateHeatMapCoordinates[stateName];
+  const centerX = shape?.label?.[0] || bounds.minX + bounds.width / 2;
+  const centerY = shape?.label?.[1] || bounds.minY + bounds.height / 2;
+  if (!stateCenter) return { x: centerX, y: centerY };
+  const x = centerX + (lng - stateCenter.lng) * bounds.width * 0.14;
+  const y = centerY + (stateCenter.lat - lat) * bounds.height * 0.14;
+  return {
+    x: Math.max(bounds.minX + 10, Math.min(bounds.minX + bounds.width - 10, x)),
+    y: Math.max(bounds.minY + 10, Math.min(bounds.minY + bounds.height - 10, y))
+  };
+};
+
+const buildFacilityNodes = (record, shape, bounds) => {
+  if (!record || !shape) return { plotted: [], pending: [] };
+  const candidates = [];
+  const largestFacility = metricNodeValue(record.largestKnownFacility || record.largestFacility);
+  const currentProject = metricNodeValue(record.currentProject);
+  if (largestFacility) {
+    const details = record.largestFacilityDetails || [];
+    candidates.push({
+      title: largestFacility,
+      type: 'Largest known facility',
+      company: parseCompany(details),
+      status: parseStatus(details) === 'Unknown' ? 'Operational' : parseStatus(details),
+      mw: parseMw(details),
+      source: record.sourceName || 'State intelligence dataset',
+      details,
+      location: detailValue(details, 'Location') || record.state
+    });
+  }
+  if (currentProject) {
+    const details = record.currentProjectDetails || [];
+    candidates.push({
+      title: currentProject,
+      type: 'Current project',
+      company: parseCompany(details),
+      status: parseStatus(details),
+      mw: parseMw(details),
+      source: record.facilityProjectSourceName || record.sourceName || 'State intelligence dataset',
+      details,
+      location: detailValue(details, 'Location') || record.state
+    });
+  }
+  (record.currentProjects || []).forEach((project, index) => {
+    const details = project.details || [];
+    candidates.push({
+      title: project.title,
+      type: index === 0 ? 'Top tracked project' : 'Tracked project',
+      company: parseCompany(details),
+      status: parseStatus(details),
+      mw: parseMw(details),
+      source: project.sourceName || record.facilityProjectSourceName || record.sourceName || 'State intelligence dataset',
+      details,
+      location: detailValue(details, 'Location') || record.state
+    });
+  });
+
+  const plotted = [];
+  const pending = [];
+  candidates.slice(0, 18).forEach((item, index) => {
+    const coordinate = resolveLocationCoordinate(item.location, item.details, record.state);
+    if (!coordinate) {
+      pending.push({ ...item, id: `${item.title}-${index}` });
+      return;
+    }
+    const point = latLngToStateSvgPoint(coordinate.lat, coordinate.lng, record.state, bounds, shape);
+    plotted.push({ ...item, id: `${item.title}-${index}`, ...point, coordinate });
+  });
+  return { plotted, pending };
+};
+
+const clusterFacilityNodes = (nodes) => {
+  const clusters = [];
+  nodes.forEach((node) => {
+    const cluster = clusters.find((item) => Math.abs(item.x - node.x) < 12 && Math.abs(item.y - node.y) < 12);
+    if (cluster) {
+      cluster.nodes.push(node);
+      cluster.count += 1;
+      cluster.x = (cluster.x + node.x) / 2;
+      cluster.y = (cluster.y + node.y) / 2;
+    } else {
+      clusters.push({ ...node, nodes: [node], count: 1 });
+    }
+  });
+  return clusters;
+};
+
+const buildEstimatedFacilityDots = (record, shape, bounds) => {
+  const estimatedCount = Math.round(parseRangeNumber(record?.totalDataCenters?.value));
+  if (!record || !shape || !bounds || !estimatedCount || estimatedCount < 1) {
+    return { estimatedCount: 0, dots: [] };
+  }
+
+  const dotCount = Math.min(estimatedCount, 140);
+  const generatedCount = Math.ceil(dotCount * 1.65);
+  const columns = Math.max(4, Math.ceil(Math.sqrt(generatedCount * (bounds.width / Math.max(bounds.height, 1)))));
+  const rows = Math.max(4, Math.ceil(generatedCount / columns));
+  const dots = [];
+
+  for (let index = 0; index < generatedCount; index += 1) {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const stagger = row % 2 === 0 ? 0.18 : -0.18;
+    const x = bounds.minX + ((column + 0.55 + stagger) / (columns + 0.5)) * bounds.width;
+    const y = bounds.minY + ((row + 0.62) / (rows + 0.8)) * bounds.height;
+    dots.push({
+      id: `estimated-active-${index}`,
+      x,
+      y,
+      title: `${record.state} estimated active data center`,
+      type: 'Estimated active facility',
+      company: 'Statewide modeled count',
+      location: 'Approximate distribution inside state outline',
+      status: 'Operational',
+      source: record.totalDataCenters?.sourceName || record.sourceName || 'State intelligence dataset',
+      coordinate: { approximate: true }
+    });
+  }
+
+  return { estimatedCount, dots };
+};
+
+const StateFacilityMap = ({ stateName, record, compact = false }) => {
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const shape = usStateShapes.find((item) => item.name === stateName) || usStateShapes.find((item) => item.abbr === record?.abbreviation);
+  const bounds = getStateShapeBounds(shape);
+  const score = record ? calculateHeatScore(record, 'risk').score : null;
+  const colors = heatColor(score);
+  const { plotted, pending } = buildFacilityNodes(record, shape, bounds);
+  const { estimatedCount, dots: estimatedDots } = buildEstimatedFacilityDots(record, shape, bounds);
+  const clusters = clusterFacilityNodes(plotted);
+  const coordinates = stateHeatMapCoordinates[stateName];
+  const clipId = `state-profile-clip-${String(stateName || 'state').replace(/[^a-z0-9]/gi, '-')}-${compact ? 'small' : 'large'}`;
+  const glowId = `state-profile-glow-${String(stateName || 'state').replace(/[^a-z0-9]/gi, '-')}-${compact ? 'small' : 'large'}`;
+  const pipelineCount = plotted.filter((node) => ['Planned', 'Under Construction'].includes(node.status)).length + pending.filter((node) => ['Planned', 'Under Construction'].includes(node.status)).length;
+  const totalFacilityLabel = formatMetricValue(record?.totalDataCenters);
+
+  return (
+    <article style={{ position: 'relative', minHeight: compact ? 260 : 360, borderRadius: compact ? 18 : 24, padding: compact ? '1rem' : '1.25rem', overflow: 'hidden', color: '#fff', background: 'linear-gradient(145deg, rgba(5,16,32,0.98), rgba(10,31,61,0.96))', border: `1px solid ${colors.border}`, boxShadow: `0 22px 58px ${colors.glow}, inset 0 0 0 1px rgba(255,255,255,0.05)` }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: compact ? '24px 24px' : '32px 32px', opacity: 0.42 }} />
+      <div style={{ position: 'absolute', inset: -1, borderRadius: compact ? 18 : 24, background: `linear-gradient(120deg, ${colors.background}, rgba(6,182,212,0.34), rgba(124,58,237,0.48), ${colors.background})`, backgroundSize: '260% 260%', animation: 'aiGradientDrift 7s ease infinite', opacity: 0.24 }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', gap: '0.8rem', alignItems: 'flex-start' }}>
+        <div>
+          <p style={{ margin: 0, color: 'rgba(219,234,254,0.68)', fontSize: compact ? '0.62rem' : '0.72rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.08em' }}>State Data Center Map</p>
+          <strong style={{ display: 'block', marginTop: 6, color: '#fff', fontSize: compact ? '1.05rem' : '1.35rem', lineHeight: 1.1 }}>{stateName}</strong>
+          <span style={{ display: 'block', marginTop: 5, color: 'rgba(219,234,254,0.72)', fontSize: compact ? '0.72rem' : '0.82rem', fontWeight: 750 }}>Facility and project location nodes</span>
+          {coordinates && (
+            <span style={{ display: 'block', marginTop: 4, color: 'rgba(191,219,254,0.72)', fontSize: compact ? '0.66rem' : '0.76rem', fontWeight: 750 }}>
+              {coordinates.region} · center {coordinates.lat.toFixed(2)}, {coordinates.lng.toFixed(2)}
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'grid', gap: '0.4rem', minWidth: compact ? 98 : 128 }}>
+          <span style={{ border: '1px solid rgba(103,232,249,0.28)', borderRadius: 10, background: 'rgba(255,255,255,0.1)', padding: '0.45rem 0.55rem', color: '#dbeafe', fontSize: compact ? '0.66rem' : '0.76rem', fontWeight: 900, textAlign: 'right' }}>Estimated active: {totalFacilityLabel}</span>
+          <span style={{ border: '1px solid rgba(251,191,36,0.28)', borderRadius: 10, background: 'rgba(251,191,36,0.1)', padding: '0.45rem 0.55rem', color: '#ffedd5', fontSize: compact ? '0.66rem' : '0.76rem', fontWeight: 900, textAlign: 'right' }}>Pipeline: {pipelineCount}</span>
+        </div>
+      </div>
+      <svg viewBox={bounds.viewBox} preserveAspectRatio="xMidYMid meet" style={{ position: 'relative', zIndex: 1, width: '100%', height: compact ? 132 : 210, marginTop: compact ? 10 : 14, overflow: 'visible' }}>
+        <defs>
+          <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="5" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <clipPath id={clipId}>
+            {shape && <path d={shape.d} />}
+          </clipPath>
+          <linearGradient id={`${glowId}-fill`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.58" />
+            <stop offset="52%" stopColor="#2563eb" stopOpacity="0.38" />
+            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.28" />
+          </linearGradient>
+        </defs>
+        {shape ? (
+          <>
+            <path d={shape.d} fill={`url(#${glowId}-fill)`} opacity="0.9" stroke="#67e8f9" strokeWidth="2.8" strokeLinejoin="round" filter={`url(#${glowId})`} />
+            <g clipPath={`url(#${clipId})`}>
+              <path d={shape.d} fill="rgba(255,255,255,0.1)" />
+              {estimatedDots.map((dot, index) => (
+                <g key={dot.id} className={index % 7 === 0 ? 'ai-map-node' : undefined} onMouseEnter={() => setHoveredNode(dot)} onMouseLeave={() => setHoveredNode(null)} style={{ cursor: 'default' }}>
+                  <circle cx={dot.x} cy={dot.y} r={compact ? 2.4 : 3.1} fill="#67e8f9" opacity="0.2" />
+                  <circle cx={dot.x} cy={dot.y} r={compact ? 1.45 : 1.9} fill="#38bdf8" opacity="0.86" stroke="rgba(255,255,255,0.72)" strokeWidth="0.35" />
+                </g>
+              ))}
+              {clusters.map((cluster) => {
+                const node = cluster.nodes[0];
+                const statusStyle = dotStatusStyles[node.status] || dotStatusStyles.Unknown;
+                return (
+                <g key={cluster.id || node.id} className="ai-map-node" onMouseEnter={() => setHoveredNode(cluster.count > 1 ? { ...node, title: `${cluster.count} facilities/projects`, type: 'Cluster', location: cluster.nodes.map((item) => item.title).join(', '), clusterNodes: cluster.nodes } : node)} onMouseLeave={() => setHoveredNode(null)} style={{ transformOrigin: `${cluster.x}px ${cluster.y}px`, cursor: 'default' }}>
+                  <circle cx={cluster.x} cy={cluster.y} r={cluster.count > 1 ? 12 : 9} fill={statusStyle.color} opacity="0.18" />
+                  <circle cx={cluster.x} cy={cluster.y} r={cluster.count > 1 ? 7 : 4.4} fill={statusStyle.color} stroke="#fff" strokeWidth="1.2" />
+                  {cluster.count > 1 && <text x={cluster.x} y={cluster.y + 1} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize="7" fontWeight="950" pointerEvents="none">{cluster.count}</text>}
+                </g>
+              );})}
+            </g>
+          </>
+        ) : (
+          <path d="M47 92 C62 46 107 36 138 55 C162 20 226 42 238 82 C289 94 282 146 233 145 C206 169 155 157 141 133 C105 158 50 140 47 92Z" fill={colors.background} stroke={colors.border} strokeWidth="3" strokeLinejoin="round" filter={`url(#${glowId})`} />
+        )}
+      </svg>
+      {pending.length > 0 && (
+        <div style={{ position: 'relative', zIndex: 1, marginTop: compact ? 6 : 8, color: '#bfdbfe', fontSize: compact ? '0.66rem' : '0.74rem', fontWeight: 800 }}>
+          {plotted.length === 0 ? 'Location data pending' : `${pending.length} location${pending.length === 1 ? '' : 's'} pending coordinates`}
+        </div>
+      )}
+      {estimatedCount > 0 && (
+        <div style={{ position: 'relative', zIndex: 1, marginTop: pending.length > 0 ? 3 : compact ? 6 : 8, color: 'rgba(219,234,254,0.76)', fontSize: compact ? '0.62rem' : '0.72rem', fontWeight: 800 }}>
+          Cyan field dots visualize the statewide {totalFacilityLabel} active/planned estimate; larger colored nodes are tracked named projects.
+        </div>
+      )}
+      <div style={{ position: 'absolute', zIndex: 2, left: compact ? 12 : 16, bottom: compact ? 10 : 14, display: 'flex', gap: '0.45rem', flexWrap: 'wrap', maxWidth: 'calc(100% - 24px)' }}>
+        {['Operational', 'Planned', 'Under Construction', 'Canceled'].map((status) => (
+          <span key={status} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, background: 'rgba(7,26,51,0.72)', padding: '0.3rem 0.5rem', color: '#dbeafe', fontSize: compact ? '0.58rem' : '0.66rem', fontWeight: 900 }}>
+            <i style={{ width: 8, height: 8, borderRadius: 999, background: dotStatusStyles[status].color, boxShadow: `0 0 10px ${dotStatusStyles[status].color}` }} />
+            {status}
+          </span>
+        ))}
+      </div>
+      {hoveredNode && (
+        <div style={{ position: 'absolute', left: compact ? 14 : 20, right: compact ? 14 : 20, bottom: compact ? 54 : 62, zIndex: 3, border: '1px solid rgba(103,232,249,0.36)', borderRadius: 12, background: 'rgba(7,26,51,0.86)', backdropFilter: 'blur(14px)', padding: '0.75rem 0.85rem', boxShadow: '0 18px 38px rgba(0,0,0,0.22)' }}>
+          <strong style={{ display: 'block', color: '#fff', fontSize: '0.78rem', lineHeight: 1.2 }}>{hoveredNode.title}</strong>
+          <span style={{ display: 'block', marginTop: 4, color: '#bfdbfe', fontSize: '0.68rem', fontWeight: 800 }}>{hoveredNode.company || hoveredNode.type}</span>
+          <span style={{ display: 'block', marginTop: 3, color: '#dbeafe', fontSize: '0.66rem', lineHeight: 1.35 }}>{hoveredNode.location}</span>
+          <span style={{ display: 'block', marginTop: 3, color: (dotStatusStyles[hoveredNode.status] || dotStatusStyles.Unknown).color, fontSize: '0.66rem', fontWeight: 900 }}>Status: {hoveredNode.status || 'Unknown'}{hoveredNode.mw ? ` · ${hoveredNode.mw}` : ''}</span>
+          {hoveredNode.coordinate?.approximate && <span style={{ display: 'block', marginTop: 3, color: '#fef3c7', fontSize: '0.64rem', fontWeight: 850 }}>Approximate location</span>}
+          <span style={{ display: 'block', marginTop: 3, color: '#93c5fd', fontSize: '0.62rem', lineHeight: 1.3 }}>Source: {hoveredNode.source || 'State intelligence dataset'}</span>
+        </div>
+      )}
+    </article>
+  );
+};
+
+const LockedStateFacilityMapPreview = ({ stateName }) => (
+  <article style={{ position: 'relative', minHeight: 180, borderRadius: 18, padding: '1rem', overflow: 'hidden', color: '#fff', background: 'linear-gradient(145deg, rgba(8,25,47,0.96), rgba(18,58,102,0.94))', border: '1px solid rgba(103,232,249,0.28)', boxShadow: '0 22px 58px rgba(13,110,253,0.2), inset 0 0 0 1px rgba(255,255,255,0.05)' }}>
+    <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: '24px 24px', opacity: 0.42 }} />
+    <div style={{ position: 'absolute', inset: -1, background: 'linear-gradient(120deg, rgba(13,110,253,0.55), rgba(6,182,212,0.25), rgba(124,58,237,0.42), rgba(13,110,253,0.55))', backgroundSize: '260% 260%', animation: 'aiGradientDrift 7s ease infinite', opacity: 0.22 }} />
+    <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', gap: '0.8rem', alignItems: 'flex-start', filter: 'blur(1.4px)', opacity: 0.72 }}>
+      <div>
+        <p style={{ margin: 0, color: 'rgba(219,234,254,0.68)', fontSize: '0.62rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.08em' }}>State Data Center Map</p>
+        <strong style={{ display: 'block', marginTop: 6, color: '#fff', fontSize: '1.05rem', lineHeight: 1.1 }}>{stateName}</strong>
+        <span style={{ display: 'block', marginTop: 5, color: 'rgba(219,234,254,0.72)', fontSize: '0.72rem', fontWeight: 750 }}>Facility and project location nodes</span>
+      </div>
+      <span style={{ width: 32, height: 32, borderRadius: 12, background: 'rgba(255,255,255,0.12)', display: 'grid', placeItems: 'center', color: '#67e8f9', boxShadow: '0 0 24px rgba(6,182,212,0.22)' }}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17">
+          <path d="M4 18V8m5 10V5m5 13v-7m5 7V3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </span>
+    </div>
+    <div style={{ position: 'relative', zIndex: 1, margin: '1.1rem auto 0', width: '42%', height: 70, borderRadius: 14, border: '1px solid rgba(103,232,249,0.38)', background: 'rgba(13,110,253,0.22)', filter: 'blur(2px)', transform: 'rotate(-10deg)', boxShadow: '0 0 26px rgba(103,232,249,0.28)' }} />
+    <div style={{ position: 'absolute', inset: 0, zIndex: 2, display: 'grid', placeItems: 'center', padding: '1rem', background: 'linear-gradient(180deg, rgba(7,26,51,0.14), rgba(7,26,51,0.46))' }}>
+      <div style={{ border: '1px solid rgba(219,234,254,0.32)', borderRadius: 14, background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(14px)', padding: '0.75rem 0.95rem', textAlign: 'center', boxShadow: '0 18px 38px rgba(0,0,0,0.18)' }}>
+        <span style={{ color: '#dbeafe', display: 'grid', placeItems: 'center', marginBottom: 6 }}><LockIcon size={20} /></span>
+        <strong style={{ display: 'block', color: '#fff', fontSize: '0.86rem' }}>Subscribe to unlock map intelligence</strong>
+        <span style={{ display: 'block', marginTop: 4, color: '#bfdbfe', fontSize: '0.7rem', fontWeight: 750 }}>Facility dots, status layers, and location tooltips</span>
+      </div>
+    </div>
+  </article>
+);
+
+const LockedPreviewCard = ({ title, type, accent, note }) => (
+  <article className="ai-locked-preview" style={{ position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 14, background: 'rgba(255,255,255,0.09)', padding: '1rem', minHeight: 138, boxShadow: '0 18px 36px rgba(0,0,0,0.18)', backdropFilter: 'blur(14px)', transition: 'transform 160ms ease, box-shadow 160ms ease' }}>
+    <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${accent}20, transparent 60%)` }} />
+    <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '0.7rem' }}>
+      <div>
+        <strong style={{ display: 'block', color: '#fff', fontSize: '0.95rem', lineHeight: 1.2 }}>{title}</strong>
+        <span style={{ display: 'block', marginTop: '0.25rem', color: 'rgba(255,255,255,0.72)', fontSize: '0.75rem', fontWeight: 750 }}>{note}</span>
+      </div>
+      <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(255,255,255,0.14)', display: 'grid', placeItems: 'center', color: '#dbeafe', flex: '0 0 auto' }}><LockIcon size={16} /></span>
+    </div>
+    <BlurredPreviewVisual type={type} accent={accent} />
+  </article>
+);
+
+const BlurredPreviewVisual = ({ type, accent }) => {
+  if (type === 'heatmap') {
+    return (
+      <div style={{ filter: 'blur(2.4px)', opacity: 0.86, display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 5 }}>
+        {Array.from({ length: 32 }).map((_, index) => <span key={index} style={{ height: 14, borderRadius: 4, background: index % 5 === 0 ? accent : index % 3 === 0 ? '#00d4ff' : 'rgba(255,255,255,0.28)' }} />)}
+      </div>
+    );
+  }
+  if (type === 'score') {
+    return (
+      <div style={{ filter: 'blur(2px)', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+        <div style={{ width: 70, height: 70, borderRadius: '50%', background: `conic-gradient(${accent} 0 72%, rgba(255,255,255,0.18) 72% 100%)`, display: 'grid', placeItems: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#123a66' }} />
+        </div>
+        <div style={{ flex: 1, display: 'grid', gap: 7 }}>
+          <span style={{ height: 9, borderRadius: 99, background: 'rgba(255,255,255,0.42)' }} />
+          <span style={{ height: 9, width: '76%', borderRadius: 99, background: accent }} />
+          <span style={{ height: 9, width: '52%', borderRadius: 99, background: 'rgba(255,255,255,0.28)' }} />
+        </div>
+      </div>
+    );
+  }
+  if (type === 'bars') {
+    return (
+      <div style={{ filter: 'blur(2px)', opacity: 0.88, height: 58, display: 'flex', alignItems: 'end', gap: 7 }}>
+        {[38, 24, 48, 31, 56, 42, 68, 50, 74, 61, 82, 70].map((height, index) => <span key={index} style={{ flex: 1, height: `${height}%`, borderRadius: '5px 5px 0 0', background: index > 6 ? accent : 'rgba(255,255,255,0.34)' }} />)}
+      </div>
+    );
+  }
+  return (
+    <svg viewBox="0 0 280 70" preserveAspectRatio="none" style={{ width: '100%', height: 64, filter: 'blur(2px)', opacity: 0.9 }}>
+      <path d="M0 50 C32 44 46 58 76 43 C106 28 126 35 152 26 C184 14 205 24 232 16 C254 10 266 14 280 8" fill="none" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+      <path d="M0 55 C32 49 46 63 76 48 C106 33 126 40 152 31 C184 19 205 29 232 21 C254 15 266 19 280 13 L280 70 L0 70 Z" fill={accent} opacity="0.18" />
+    </svg>
+  );
+};
+
+const planBadges = ['Updated Monthly', 'All 50 States', 'Downloadable Intelligence Reports'];
+
+const pricingPlans = [
+  {
+    name: 'Free Preview',
+    badge: 'Starter Access',
+    price: '$0',
+    button: 'Current Plan',
+    tone: 'muted',
+    features: [
+      'View top-level state metrics',
+      'Browse all state previews',
+      'Limited infrastructure summaries',
+      'No PDF downloads',
+      'No saved profiles',
+      'No detailed forecasts'
+    ]
+  },
+  {
+    name: 'Intelligence Access',
+    badge: 'Most Popular',
+    trialBadge: '7 day $1 trial',
+    price: '$19/month after trial',
+    button: 'Start for $1 today',
+    tone: 'featured',
+    features: [
+      'Full AI economy reports',
+      'Energy + water impact analysis',
+      'Jobs lost vs jobs created',
+      'Housing + tax impact forecasts',
+      'Infrastructure resilience dashboards',
+      'Downloadable PDF reports',
+      'Saved state comparisons',
+      'Monthly intelligence updates'
+    ]
+  },
+  {
+    name: 'Enterprise / Policy',
+    badge: 'Enterprise',
+    price: 'Custom Pricing',
+    button: 'Contact Enterprise Team',
+    tone: 'dark',
+    features: [
+      'Multi-user access',
+      'API/data export access',
+      'Infrastructure monitoring',
+      'State comparison dashboards',
+      'Research & policy support',
+      'White-label reporting',
+      'Priority updates'
+    ]
+  }
+];
+
+const planTimeline = [
+  { icon: 'grid', title: 'Infrastructure Intelligence', text: 'Track data center expansion, project pipelines, power capacity, and grid strain by state.' },
+  { icon: 'workforce', title: 'Workforce Forecasting', text: 'Monitor displacement exposure, job creation, and emerging AI workforce pressure.' },
+  { icon: 'economy', title: 'Economic Pressure Analysis', text: 'Compare housing, taxes, utility costs, and state service impacts before they compound.' },
+  { icon: 'resilience', title: 'Resilience Modeling', text: 'Identify which states are adapting and where policy, infrastructure, or labor gaps remain.' }
+];
+
+const SubscriptionPlansScreen = ({ onBack, onStartCheckout, checkoutError, isStartingCheckout }) => (
+  <div className="ai-plan-shell" style={{ minHeight: '100vh', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 14% 10%, rgba(13,110,253,0.16), transparent 30%), radial-gradient(circle at 82% 12%, rgba(124,58,237,0.14), transparent 30%), radial-gradient(circle at 50% 85%, rgba(6,182,212,0.12), transparent 34%)', pointerEvents: 'none' }} />
+    <div style={{ maxWidth: 1420, margin: '0 auto', position: 'relative' }}>
+      <button type="button" onClick={onBack} className="ai-hover-lift" style={{ border: '1px solid #cddceb', borderRadius: 999, background: 'rgba(255,255,255,0.78)', color: '#173251', padding: '0.75rem 1rem', fontSize: '0.86rem', fontWeight: 900, cursor: 'pointer', boxShadow: '0 12px 30px rgba(16,38,67,0.08)', fontFamily: 'inherit', backdropFilter: 'blur(14px)' }}>
+        Back to Calculator
+      </button>
+
+      <section className="ai-plan-hero" style={{ marginTop: '1rem', border: '1px solid rgba(199,220,245,0.92)', borderRadius: 24, background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(244,249,255,0.78))', boxShadow: '0 32px 90px rgba(18,69,145,0.13)', padding: '2.2rem', overflow: 'hidden', position: 'relative', backdropFilter: 'blur(18px)' }}>
+        <div style={{ position: 'absolute', right: -90, top: -130, width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,110,253,0.2), transparent 66%)' }} />
+        <div style={{ position: 'absolute', right: 120, bottom: -160, width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.16), transparent 64%)' }} />
+        <div style={{ position: 'relative' }}>
+          <p style={{ margin: '0 0 0.7rem', color: '#647b95', fontSize: '0.78rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.12em' }}>AI Economy Impact Calculator</p>
+          <h1 style={{ margin: 0, color: '#071a33', fontSize: 'clamp(2.6rem, 5vw, 5rem)', lineHeight: 0.95, letterSpacing: 0 }}>Preview Subscription Plans</h1>
+          <p style={{ margin: '1rem 0 0', maxWidth: 920, color: '#405a78', fontSize: '1.12rem', lineHeight: 1.65, fontWeight: 650 }}>
+            Unlock full access to AI infrastructure intelligence, workforce forecasting, energy analysis, and economic resilience reports across all 50 states.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '1.3rem' }}>
+            {planBadges.map((badge) => (
+              <span key={badge} className="ai-soft-gradient" style={{ border: '1px solid #cfe0ff', borderRadius: 999, background: 'linear-gradient(120deg, rgba(255,255,255,0.92), rgba(231,244,255,0.92), rgba(242,239,255,0.92))', color: '#0d4ea6', padding: '0.62rem 0.9rem', fontSize: '0.78rem', fontWeight: 950, boxShadow: '0 14px 30px rgba(13,110,253,0.1)' }}>{badge}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="ai-plans-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.08fr 1fr', gap: '1.1rem', alignItems: 'stretch', marginTop: '1.35rem' }}>
+        {pricingPlans.map((plan) => <PricingPlanCard key={plan.name} plan={plan} onStartCheckout={onStartCheckout} isStartingCheckout={isStartingCheckout} />)}
+      </section>
+      {checkoutError && (
+        <p style={{ margin: '0.85rem 0 0', color: '#b42318', fontSize: '0.9rem', fontWeight: 850, textAlign: 'center' }}>
+          {checkoutError}
+        </p>
+      )}
+
+      <section style={{ marginTop: '1.55rem' }}>
+        <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.9rem' }}>
+          <div>
+            <p style={{ margin: '0 0 0.35rem', color: '#647b95', fontSize: '0.76rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.1em' }}>What You Unlock</p>
+            <h2 style={{ margin: 0, color: '#071a33', fontSize: 'clamp(1.7rem, 3vw, 2.5rem)', lineHeight: 1.05 }}>A full intelligence workflow</h2>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1rem' }}>
+          {planTimeline.map((item) => <UnlockTimelineCard key={item.title} item={item} />)}
+        </div>
+      </section>
+
+      <LockedPreviewSuite />
+
+      <section className="ai-mobile-sticky-cta" style={{ marginTop: '1.55rem', border: '1px solid rgba(197,219,247,0.94)', borderRadius: 24, background: 'linear-gradient(135deg, rgba(255,255,255,0.94), rgba(235,246,255,0.88))', padding: '2rem', textAlign: 'center', boxShadow: '0 28px 76px rgba(18,69,145,0.14)', backdropFilter: 'blur(16px)' }}>
+        <h2 style={{ margin: 0, color: '#071a33', fontSize: 'clamp(1.9rem, 3.7vw, 3.4rem)', lineHeight: 1 }}>The AI transition is reshaping every state economy.</h2>
+        <p style={{ margin: '0.85rem auto 0', maxWidth: 820, color: '#405a78', fontSize: '1rem', lineHeight: 1.6, fontWeight: 700 }}>
+          Track the changes before they impact infrastructure, jobs, utilities, housing, and public systems.
+        </p>
+        <div style={{ marginTop: '1.25rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.8rem' }}>
+          <a href="https://naierm.com" target="_blank" rel="noreferrer" className="ai-hover-lift" style={{ minHeight: 54, border: '1px solid #cddceb', borderRadius: 14, background: '#fff', color: '#173251', padding: '0 1.25rem', fontSize: '0.95rem', fontWeight: 950, boxShadow: '0 12px 28px rgba(16,38,67,0.08)', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-grid', placeItems: 'center', textDecoration: 'none' }}>Visit NAIERM</a>
+        </div>
+      </section>
+    </div>
+  </div>
+);
+
+const PricingPlanCard = ({ plan, onStartCheckout, isStartingCheckout }) => {
+  const featured = plan.tone === 'featured';
+  const dark = plan.tone === 'dark';
+  const background = dark
+    ? 'linear-gradient(145deg, #08192f, #123a66 58%, #1d2a58)'
+    : featured
+      ? 'linear-gradient(145deg, #ffffff 0%, #eef7ff 48%, #f3efff 100%)'
+      : 'linear-gradient(145deg, rgba(255,255,255,0.92), rgba(248,251,255,0.86))';
+  const textColor = dark ? '#fff' : '#071a33';
+  const mutedColor = dark ? 'rgba(255,255,255,0.72)' : '#5d6f88';
+  return (
+    <article className={`ai-hover-lift ${featured ? 'ai-plan-featured' : ''}`} style={{ position: 'relative', overflow: 'hidden', border: `1px solid ${featured ? 'rgba(13,110,253,0.46)' : dark ? 'rgba(255,255,255,0.14)' : '#dce8f3'}`, borderRadius: 24, background, color: textColor, padding: featured ? '1.65rem' : '1.35rem', boxShadow: featured ? '0 30px 80px rgba(13,110,253,0.18)' : '0 18px 46px rgba(16,38,67,0.09)', transform: featured ? 'scale(1.025)' : 'none', backdropFilter: 'blur(18px)' }}>
+      <div style={{ position: 'absolute', inset: 0, background: featured ? 'radial-gradient(circle at 80% 0%, rgba(13,110,253,0.18), transparent 38%), radial-gradient(circle at 20% 100%, rgba(6,182,212,0.12), transparent 42%)' : dark ? 'radial-gradient(circle at 85% 0%, rgba(6,182,212,0.24), transparent 35%), radial-gradient(circle at 0% 100%, rgba(124,58,237,0.23), transparent 42%)' : 'linear-gradient(135deg, rgba(255,255,255,0.4), transparent)' }} />
+      <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <span style={{ display: 'inline-flex', border: `1px solid ${dark ? 'rgba(255,255,255,0.2)' : featured ? '#9bc8ff' : '#dce8f3'}`, borderRadius: 999, background: dark ? 'rgba(255,255,255,0.1)' : featured ? '#eaf3ff' : '#f3f7fc', color: dark ? '#bdefff' : featured ? '#0d6efd' : '#48617d', padding: '0.45rem 0.68rem', fontSize: '0.72rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{plan.badge}</span>
+          {plan.trialBadge && <span style={{ display: 'inline-flex', border: '1px solid rgba(6,182,212,0.32)', borderRadius: 999, background: 'rgba(6,182,212,0.1)', color: '#087ea4', padding: '0.45rem 0.68rem', fontSize: '0.72rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{plan.trialBadge}</span>}
+        </div>
+        <h3 style={{ margin: '1.1rem 0 0', fontSize: '1.05rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: textColor }}>{plan.name}</h3>
+        <strong style={{ display: 'block', marginTop: '0.6rem', fontSize: featured ? '2.85rem' : '2.25rem', lineHeight: 1, color: textColor }}>{plan.price}</strong>
+        {plan.priceNote && <span style={{ display: 'block', marginTop: '0.45rem', color: featured ? '#0d4ea6' : mutedColor, fontSize: '0.96rem', fontWeight: 900 }}>{plan.priceNote}</span>}
+        <ul style={{ listStyle: 'none', margin: '1.25rem 0 0', padding: 0, display: 'grid', gap: '0.72rem' }}>
+          {plan.features.map((feature) => (
+            <li key={feature} style={{ display: 'grid', gridTemplateColumns: '22px minmax(0, 1fr)', gap: '0.6rem', alignItems: 'start', color: mutedColor, fontSize: '0.9rem', fontWeight: 750, lineHeight: 1.35 }}>
+              <span style={{ width: 22, height: 22, borderRadius: '50%', background: dark ? 'rgba(6,182,212,0.16)' : featured ? 'rgba(13,110,253,0.12)' : '#edf5ff', color: dark ? '#67e8f9' : '#0d6efd', display: 'grid', placeItems: 'center', fontSize: '0.78rem', fontWeight: 950 }}>{feature.startsWith('No ') ? '-' : '+'}</span>
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+        {dark ? (
+          <a href="/enterprise" onClick={(event) => { event.preventDefault(); window.location.assign('/enterprise'); }} className="ai-hover-lift" style={{ width: '100%', minHeight: 52, marginTop: '1.35rem', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: '0.92rem', fontWeight: 950, cursor: 'pointer', fontFamily: 'inherit', boxShadow: 'none', display: 'grid', placeItems: 'center', textDecoration: 'none' }}>
+            {plan.button}
+          </a>
+        ) : (
+          <>
+            <button type="button" onClick={featured ? onStartCheckout : undefined} disabled={featured && isStartingCheckout} className="ai-hover-lift" style={{ width: '100%', minHeight: 52, marginTop: '1.35rem', border: 0, borderRadius: 14, background: featured ? 'linear-gradient(135deg, #0d6efd, #6d5dfc)' : '#edf3fa', color: featured ? '#fff' : '#48617d', fontSize: '0.92rem', fontWeight: 950, cursor: featured ? (isStartingCheckout ? 'wait' : 'pointer') : 'default', fontFamily: 'inherit', boxShadow: featured ? '0 18px 36px rgba(13,110,253,0.25)' : 'none', opacity: featured && isStartingCheckout ? 0.78 : 1 }}>
+              {featured && isStartingCheckout ? 'Starting checkout...' : plan.button}
+            </button>
+            {featured && (
+              <p style={{ margin: '0.55rem 0 0', color: mutedColor, fontSize: '0.76rem', fontStyle: 'italic', fontWeight: 650, lineHeight: 1.45 }}>
+                Your card will be charged $19/month after your 7-day trial ends unless you cancel before renewal.
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </article>
+  );
+};
+
+const UnlockTimelineCard = ({ item }) => (
+  <article className="ai-hover-lift ai-soft-gradient" style={{ border: '1px solid rgba(203,222,246,0.9)', borderRadius: 20, background: 'linear-gradient(135deg, rgba(255,255,255,0.92), rgba(237,247,255,0.88), rgba(244,240,255,0.84))', padding: '1.1rem', boxShadow: '0 18px 42px rgba(16,38,67,0.08)', overflow: 'hidden', position: 'relative' }}>
+    <div style={{ position: 'absolute', right: -32, top: -32, width: 104, height: 104, borderRadius: '50%', background: 'rgba(13,110,253,0.1)' }} />
+    <span style={{ position: 'relative', width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg, #0d6efd, #06b6d4)', color: '#fff', display: 'grid', placeItems: 'center', boxShadow: '0 14px 30px rgba(13,110,253,0.22)' }}><PlanIcon type={item.icon} /></span>
+    <h3 style={{ position: 'relative', margin: '0.9rem 0 0.35rem', color: '#102643', fontSize: '1rem' }}>{item.title}</h3>
+    <p style={{ position: 'relative', margin: 0, color: '#5d6f88', fontSize: '0.86rem', lineHeight: 1.55, fontWeight: 700 }}>{item.text}</p>
+  </article>
+);
+
+const LockedPreviewSuite = () => (
+  <section style={{ marginTop: '1.55rem', border: '1px solid rgba(197,219,247,0.94)', borderRadius: 24, background: 'linear-gradient(145deg, #0b1e39, #123a66)', padding: '1.2rem', boxShadow: '0 30px 82px rgba(16,38,67,0.18)', overflow: 'hidden', position: 'relative' }}>
+    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 12% 0%, rgba(0,212,255,0.18), transparent 32%), radial-gradient(circle at 100% 20%, rgba(124,58,237,0.22), transparent 34%)' }} />
+    <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: '1rem', color: '#fff' }}>
+      <div>
+        <p style={{ margin: '0 0 0.25rem', color: 'rgba(255,255,255,0.62)', fontSize: '0.72rem', fontWeight: 950, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Locked Preview</p>
+        <h2 style={{ margin: 0, fontSize: '1.55rem', lineHeight: 1.1 }}>Available with Intelligence Access</h2>
+      </div>
+      <span style={{ width: 42, height: 42, borderRadius: 14, background: 'rgba(255,255,255,0.12)', color: '#dbeafe', display: 'grid', placeItems: 'center' }}><LockIcon /></span>
+    </div>
+    <div className="ai-locked-preview-grid" style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1.05fr 0.95fr 1fr 1fr', gap: '0.85rem' }}>
+      <LockedAnalyticsTile title="Regional Heatmaps" type="heatmap" accent="#7c3aed" />
+      <LockedAnalyticsTile title="Forecast Charts" type="line" accent="#06b6d4" />
+      <LockedAnalyticsTile title="PDF Report Preview" type="pdf" accent="#0d6efd" />
+      <LockedAnalyticsTile title="State Ranking Dashboard" type="ranking" accent="#18b66a" />
+    </div>
+  </section>
+);
+
+const LockedAnalyticsTile = ({ title, type, accent }) => (
+  <article className="ai-hover-lift" style={{ minHeight: 190, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 18, background: 'rgba(255,255,255,0.08)', padding: '1rem', color: '#fff', backdropFilter: 'blur(14px)', position: 'relative', overflow: 'hidden', boxShadow: '0 18px 38px rgba(0,0,0,0.18)' }}>
+    <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${accent}24, transparent 58%)` }} />
+    <strong style={{ position: 'relative', display: 'block', fontSize: '0.95rem', marginBottom: '0.75rem' }}>{title}</strong>
+    <div style={{ position: 'relative', filter: 'blur(2.3px)', opacity: 0.86 }}>
+      {type === 'pdf' ? (
+        <div style={{ height: 126, borderRadius: 12, background: '#f8fbff', padding: '0.8rem', display: 'grid', gap: '0.45rem' }}>
+          <span style={{ height: 12, width: '70%', borderRadius: 99, background: accent }} />
+          <span style={{ height: 8, width: '92%', borderRadius: 99, background: '#dce8f3' }} />
+          <span style={{ height: 8, width: '80%', borderRadius: 99, background: '#dce8f3' }} />
+          <span style={{ height: 52, borderRadius: 10, background: `linear-gradient(135deg, ${accent}33, #eef5ff)` }} />
+        </div>
+      ) : type === 'ranking' ? (
+        <div style={{ display: 'grid', gap: '0.55rem' }}>{[86, 72, 64, 58].map((value, index) => <span key={value} style={{ height: 18, width: `${value}%`, borderRadius: 99, background: index === 0 ? accent : 'rgba(255,255,255,0.3)' }} />)}</div>
+      ) : (
+        <BlurredPreviewVisual type={type} accent={accent} />
+      )}
+    </div>
+  </article>
+);
+
+const PlanIcon = ({ type }) => {
+  if (type === 'workforce') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M8 20v-2a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="2" /></svg>;
+  }
+  if (type === 'economy') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M4 19h16M7 16V9m5 7V5m5 11v-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+  }
+  if (type === 'resilience') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M12 3l7 4v5c0 4.2-2.8 7.4-7 9-4.2-1.6-7-4.8-7-9V7l7-4z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><path d="M9 12l2 2 4-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+  }
+  return <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M4 18V8m5 10V5m5 13v-7m5 7V3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+};
+
+const accountPermissions = [
+  'Full AI Economy Impact Reports',
+  'State-by-State Calculator Access',
+  'PDF Report Downloads',
+  'Saved State Comparisons',
+  'Infrastructure Risk Dashboards',
+  'Workforce + Energy Forecasts'
+];
+
+const AccessDashboard = ({ isSignedIn, isSubscribed, accessVerificationMessage, selectedState, records, onOpenCalculator, onViewPlans, onManageBilling, onManageSubscription, onSignOut }) => {
+  const userName = 'Energy & Wealth Member';
+  const renewalDate = '2026-06-26';
+  const planName = 'Monthly';
+
+  useEffect(() => {
+    if (!isSignedIn && !accessVerificationMessage && typeof window !== 'undefined') {
+      window.location.replace('/signin?return=/account');
+    }
+  }, [isSignedIn, accessVerificationMessage]);
+
+  if (!isSignedIn) {
+    return (
+      <AccessShell>
+        <AccessMessage title={accessVerificationMessage ? 'Verifying access...' : 'Redirecting to sign in...'} message={accessVerificationMessage || 'You need to sign in before viewing your access dashboard.'} />
+      </AccessShell>
+    );
+  }
+
+  if (!isSubscribed) {
+    return (
+      <AccessShell>
+        <AccessMessage
+          title="Access Not Enabled"
+          message="Subscribe to unlock full intelligence reports and downloads."
+          action={<button type="button" onClick={onViewPlans} style={primaryAccessButton}>View Plans</button>}
+        />
+      </AccessShell>
+    );
+  }
+
+  return (
+    <AccessShell>
+      <header style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <div>
+          <p style={{ margin: '0 0 0.45rem', color: '#647b95', fontSize: '0.78rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Access Dashboard</p>
+          <h1 style={{ margin: 0, color: '#071a33', fontSize: 'clamp(2.4rem, 4.8vw, 4.6rem)', lineHeight: 0.96, letterSpacing: 0 }}>Welcome back, {userName}</h1>
+          <p style={{ margin: '0.85rem 0 0', color: '#405a78', fontSize: '1.06rem', fontWeight: 700 }}>Your Energy & Wealth Intelligence Access is active.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <a href="https://naierm.com" target="_blank" rel="noreferrer" className="ai-hover-lift" style={{ minHeight: 46, border: '1px solid #cddceb', borderRadius: 999, background: 'rgba(255,255,255,0.82)', color: '#173251', padding: '0 1rem', display: 'inline-grid', placeItems: 'center', textDecoration: 'none', fontSize: '0.86rem', fontWeight: 950, boxShadow: '0 12px 28px rgba(16,38,67,0.08)' }}>Visit NAIERM</a>
+          <button type="button" onClick={onSignOut} className="ai-hover-lift" style={{ minHeight: 46, border: '1px solid #cddceb', borderRadius: 999, background: 'rgba(255,255,255,0.82)', color: '#48617d', padding: '0 1rem', display: 'inline-grid', placeItems: 'center', fontSize: '0.86rem', fontWeight: 950, boxShadow: '0 12px 28px rgba(16,38,67,0.08)', cursor: 'pointer', fontFamily: 'inherit' }}>Sign Out</button>
+        </div>
+      </header>
+
+      <section style={{ border: '1px solid rgba(13,110,253,0.22)', borderRadius: 24, background: 'linear-gradient(135deg, rgba(255,255,255,0.92), rgba(238,247,255,0.86))', boxShadow: '0 30px 82px rgba(18,69,145,0.14)', padding: '1.35rem', marginBottom: '1.1rem', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', right: -80, top: -110, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,110,253,0.18), transparent 66%)' }} />
+        <div style={{ position: 'relative' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <h2 style={{ margin: 0, color: '#071a33', fontSize: '1.55rem' }}>Intelligence Access</h2>
+              <StatusBadge label="Active" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', marginTop: '1rem' }}>
+              <AccessFact label="Plan" value={planName} />
+              <AccessFact label="Renewal date" value={renewalDate} />
+              <AccessFact label="Permissions" value="Enabled" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginBottom: '1.1rem' }}>
+        <USHeatMap
+          records={records}
+          selectedState={selectedState || 'Alabama'}
+          onSelectState={(stateName) => onOpenCalculator(stateName)}
+        />
+      </section>
+
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.85rem', marginBottom: '1.1rem' }}>
+        <button type="button" onClick={onOpenCalculator} style={primaryAccessButton}>Open AI Economy Calculator</button>
+        <button type="button" onClick={onManageSubscription} style={secondaryAccessButton}>Manage Subscription</button>
+      </section>
+
+      <section style={{ border: '1px solid #dce8f3', borderRadius: 22, background: 'rgba(255,255,255,0.82)', boxShadow: '0 18px 46px rgba(16,38,67,0.08)', padding: '1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <div>
+          <h2 style={{ margin: 0, color: '#071a33', fontSize: '1.15rem' }}>Subscription management</h2>
+          <p style={{ margin: '0.4rem 0 0', color: '#647b95', fontSize: '0.9rem', fontWeight: 700 }}>Use the Stripe Customer Portal to update payment details, invoices, and plan settings.</p>
+        </div>
+        <button type="button" onClick={onManageBilling} style={{ ...primaryAccessButton, minWidth: 170 }}>Manage Billing</button>
+      </section>
+    </AccessShell>
+  );
+};
+
+const BillingDashboard = ({ isSignedIn, isSubscribed, onBack, onViewPlans, onSignOut, variant = 'billing' }) => {
+  const [portalStatus, setPortalStatus] = useState('');
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const stripeCustomerId = typeof window !== 'undefined' ? window.localStorage.getItem(stripeCustomerIdKey) : null;
+  const isSubscriptionPage = variant === 'subscription';
+  const isTrialing = isSubscribed;
+  const subscriptionStatus = isSubscribed ? 'Trialing' : 'Canceled';
+  const trialEndDate = '2026-06-08';
+  const nextBillingDate = '2026-06-08';
+  const paymentLast4 = stripeCustomerId ? '4242' : null;
+
+  useEffect(() => {
+    if (!isSignedIn && typeof window !== 'undefined') {
+      window.location.replace(`/signin?return=${isSubscriptionPage ? '/subscription' : '/billing'}`);
+    }
+  }, [isSignedIn]);
+
+  const openStripePortal = async () => {
+    if (!stripeCustomerId) {
+      setPortalStatus('No billing account found.');
+      return;
+    }
+
+    setIsOpeningPortal(true);
+    setPortalStatus('');
+    try {
+      const response = await fetch('/api/stripe/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: stripeCustomerId, returnUrl: window.location.origin + (isSubscriptionPage ? '/subscription' : '/billing') })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || 'Unable to open Stripe Billing Portal.');
+      }
+      window.location.assign(payload.url);
+    } catch (error) {
+      setPortalStatus(error.message || 'Unable to open Stripe Billing Portal.');
+    } finally {
+      setIsOpeningPortal(false);
+    }
+  };
+
+  if (!isSignedIn) {
+    return (
+      <AccessShell>
+        <AccessMessage title="Redirecting to sign in..." message={`You need to sign in before managing ${isSubscriptionPage ? 'your subscription' : 'billing'}.`} />
+      </AccessShell>
+    );
+  }
+
+  return (
+    <AccessShell>
+      <header style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <div>
+          <p style={{ margin: '0 0 0.45rem', color: '#647b95', fontSize: '0.78rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{isSubscriptionPage ? 'Subscription Access Center' : 'Secure Billing Center'}</p>
+          <h1 style={{ margin: 0, color: '#071a33', fontSize: 'clamp(2.4rem, 4.8vw, 4.5rem)', lineHeight: 0.96, letterSpacing: 0 }}>{isSubscriptionPage ? 'Manage Subscription' : 'Manage Billing'}</h1>
+          <p style={{ margin: '0.85rem 0 0', color: '#405a78', fontSize: '1.06rem', fontWeight: 700 }}>{isSubscriptionPage ? 'Manage your Energy & Wealth subscription access, permissions, and renewal settings.' : 'View subscription status, payment access, and Stripe billing controls.'}</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onBack} className="ai-hover-lift" style={{ minHeight: 46, border: '1px solid #cddceb', borderRadius: 999, background: 'rgba(255,255,255,0.82)', color: '#173251', padding: '0 1rem', display: 'inline-grid', placeItems: 'center', fontSize: '0.86rem', fontWeight: 950, boxShadow: '0 12px 28px rgba(16,38,67,0.08)', cursor: 'pointer', fontFamily: 'inherit' }}>Back to Dashboard</button>
+          <button type="button" onClick={onSignOut} className="ai-hover-lift" style={{ minHeight: 46, border: '1px solid #cddceb', borderRadius: 999, background: 'rgba(255,255,255,0.82)', color: '#48617d', padding: '0 1rem', display: 'inline-grid', placeItems: 'center', fontSize: '0.86rem', fontWeight: 950, boxShadow: '0 12px 28px rgba(16,38,67,0.08)', cursor: 'pointer', fontFamily: 'inherit' }}>Sign Out</button>
+        </div>
+      </header>
+
+      {!stripeCustomerId && (
+        <section style={{ border: '1px solid #f0c36d', borderRadius: 18, background: '#fff8e6', color: '#7a4b00', padding: '1rem 1.1rem', marginBottom: '1rem', fontWeight: 850 }}>
+          No billing account found.
+        </section>
+      )}
+
+      <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(320px, 0.95fr)', gap: '1rem', alignItems: 'start' }}>
+        <article style={{ border: '1px solid rgba(13,110,253,0.22)', borderRadius: 24, background: 'linear-gradient(135deg, rgba(255,255,255,0.94), rgba(238,247,255,0.88))', boxShadow: '0 30px 82px rgba(18,69,145,0.14)', padding: '1.35rem', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', right: -90, top: -120, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.18), transparent 66%)' }} />
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ margin: 0, color: '#647b95', fontSize: '0.74rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Subscription Status</p>
+              <h2 style={{ margin: '0.45rem 0 0', color: '#071a33', fontSize: '1.75rem' }}>Energy & Wealth Intelligence Access</h2>
+            </div>
+            <StatusBadge label={subscriptionStatus} />
+          </div>
+          <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.8rem', marginTop: '1rem' }}>
+            <AccessFact label="Plan name" value="Monthly Intelligence Access" />
+            <AccessFact label="Status" value={subscriptionStatus} />
+            {isTrialing && <AccessFact label="Trial end date" value={trialEndDate} />}
+            <AccessFact label="Next billing date" value={nextBillingDate} />
+            <AccessFact label="Price" value="$19/month" />
+            {isSubscriptionPage && <AccessFact label="Access permissions" value="Enabled" />}
+            <AccessFact label="Payment method" value={paymentLast4 ? `Card ending in ${paymentLast4}` : 'Not available'} />
+          </div>
+        </article>
+
+        <article style={{ border: '1px solid #dce8f3', borderRadius: 24, background: 'rgba(255,255,255,0.88)', boxShadow: '0 20px 58px rgba(16,38,67,0.1)', padding: '1.25rem' }}>
+          <p style={{ margin: 0, color: '#647b95', fontSize: '0.74rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{isSubscriptionPage ? 'Subscription Actions' : 'Billing Actions'}</p>
+          <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
+            <button type="button" onClick={openStripePortal} disabled={!stripeCustomerId || isOpeningPortal} style={{ ...primaryAccessButton, opacity: (!stripeCustomerId || isOpeningPortal) ? 0.68 : 1, cursor: (!stripeCustomerId || isOpeningPortal) ? 'not-allowed' : 'pointer' }}>{isOpeningPortal ? 'Opening Portal...' : 'Open Stripe Billing Portal'}</button>
+            {isSubscriptionPage && <button type="button" onClick={openStripePortal} disabled={!stripeCustomerId || isOpeningPortal} style={{ ...secondaryAccessButton, opacity: (!stripeCustomerId || isOpeningPortal) ? 0.68 : 1, cursor: (!stripeCustomerId || isOpeningPortal) ? 'not-allowed' : 'pointer' }}>Manage Billing</button>}
+            <button type="button" onClick={openStripePortal} disabled={!stripeCustomerId || isOpeningPortal} style={{ ...secondaryAccessButton, opacity: (!stripeCustomerId || isOpeningPortal) ? 0.68 : 1, cursor: (!stripeCustomerId || isOpeningPortal) ? 'not-allowed' : 'pointer' }}>Update Payment Method</button>
+            <button type="button" onClick={openStripePortal} disabled={!stripeCustomerId || isOpeningPortal} style={{ ...secondaryAccessButton, color: '#9f1239', opacity: (!stripeCustomerId || isOpeningPortal) ? 0.68 : 1, cursor: (!stripeCustomerId || isOpeningPortal) ? 'not-allowed' : 'pointer' }}>Cancel Subscription</button>
+            <button type="button" onClick={onViewPlans} style={secondaryAccessButton}>View Plans</button>
+          </div>
+          {portalStatus && <p style={{ margin: '0.85rem 0 0', color: portalStatus === 'No billing account found.' ? '#9a6100' : '#b42318', fontSize: '0.86rem', fontWeight: 800, lineHeight: 1.45 }}>{portalStatus}</p>}
+        </article>
+      </section>
+
+      <section style={{ marginTop: '1rem', border: '1px solid rgba(6,182,212,0.24)', borderRadius: 22, background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(236,253,255,0.78))', boxShadow: '0 18px 46px rgba(6,182,212,0.08)', padding: '1.1rem 1.2rem' }}>
+        <p style={{ margin: 0, color: '#0f3f64', fontSize: '0.94rem', fontStyle: 'italic', fontWeight: 750, lineHeight: 1.55 }}>
+          Your card will be charged $19/month after your 7-day trial ends unless you cancel before renewal.
+        </p>
+      </section>
+    </AccessShell>
+  );
+};
+
+const AccessShell = ({ children }) => (
+  <div style={{ minHeight: '100vh', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 14% 10%, rgba(13,110,253,0.16), transparent 30%), radial-gradient(circle at 82% 12%, rgba(124,58,237,0.12), transparent 32%), radial-gradient(circle at 50% 88%, rgba(6,182,212,0.1), transparent 34%)', pointerEvents: 'none' }} />
+    <div style={{ maxWidth: 1220, margin: '0 auto', position: 'relative' }}>{children}</div>
+  </div>
+);
+
+const AccessMessage = ({ title, message, action }) => (
+  <section style={{ minHeight: '64vh', display: 'grid', placeItems: 'center' }}>
+    <div style={{ width: 'min(620px, 100%)', border: '1px solid #cddceb', borderRadius: 24, background: 'rgba(255,255,255,0.9)', boxShadow: '0 30px 82px rgba(18,69,145,0.14)', padding: '2rem', textAlign: 'center' }}>
+      <span style={{ width: 58, height: 58, borderRadius: 18, background: '#edf5ff', color: '#0d6efd', display: 'grid', placeItems: 'center', margin: '0 auto 1rem' }}><LockIcon size={28} /></span>
+      <h1 style={{ margin: 0, color: '#071a33', fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1 }}>{title}</h1>
+      <p style={{ margin: '0.85rem auto 0', color: '#405a78', maxWidth: 460, fontSize: '1rem', lineHeight: 1.6, fontWeight: 700 }}>{message}</p>
+      {action && <div style={{ marginTop: '1.2rem' }}>{action}</div>}
+    </div>
+  </section>
+);
+
+const CheckIcon = ({ size = 22 }) => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} style={{ display: 'block' }}>
+    <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const StatusBadge = ({ label }) => (
+  <span style={{ border: '1px solid #ade2c5', borderRadius: 999, background: '#e9f8f0', color: '#087443', padding: '0.42rem 0.72rem', fontSize: '0.76rem', fontWeight: 950, textTransform: 'uppercase' }}>{label}</span>
+);
+
+const AccessFact = ({ label, value }) => (
+  <article style={{ border: '1px solid #dce8f3', borderRadius: 16, background: 'rgba(255,255,255,0.76)', padding: '1rem', boxShadow: '0 12px 28px rgba(16,38,67,0.06)' }}>
+    <span style={{ display: 'block', color: '#647b95', fontSize: '0.72rem', fontWeight: 950, textTransform: 'uppercase' }}>{label}</span>
+    <strong style={{ display: 'block', marginTop: 6, color: '#071a33', fontSize: '1.15rem' }}>{value}</strong>
+  </article>
+);
+
+const PermissionCard = ({ title }) => (
+  <article className="ai-hover-lift" style={{ border: '1px solid #dce8f3', borderRadius: 20, background: 'rgba(255,255,255,0.84)', padding: '1rem', boxShadow: '0 16px 38px rgba(16,38,67,0.07)', display: 'grid', gridTemplateColumns: '42px minmax(0, 1fr)', gap: '0.85rem', alignItems: 'center' }}>
+    <span style={{ width: 42, height: 42, borderRadius: 14, background: 'linear-gradient(135deg, #0d6efd, #06b6d4)', color: '#fff', display: 'grid', placeItems: 'center' }}><CheckIcon /></span>
+    <div>
+      <strong style={{ display: 'block', color: '#102643', fontSize: '0.96rem', lineHeight: 1.25 }}>{title}</strong>
+      <span style={{ display: 'block', marginTop: 4, color: '#087443', fontSize: '0.8rem', fontWeight: 950 }}>Enabled</span>
+    </div>
+  </article>
+);
+
+const primaryAccessButton = {
+  minHeight: 54,
+  border: 0,
+  borderRadius: 14,
+  background: 'linear-gradient(135deg, #0d6efd, #6d5dfc)',
+  color: '#fff',
+  padding: '0 1.15rem',
+  display: 'inline-grid',
+  placeItems: 'center',
+  fontSize: '0.92rem',
+  fontWeight: 950,
+  boxShadow: '0 18px 38px rgba(13,110,253,0.24)',
+  cursor: 'pointer',
+  fontFamily: 'inherit'
+};
+
+const secondaryAccessButton = {
+  minHeight: 54,
+  border: '1px solid #cddceb',
+  borderRadius: 14,
+  background: 'rgba(255,255,255,0.86)',
+  color: '#173251',
+  padding: '0 1.15rem',
+  display: 'inline-grid',
+  placeItems: 'center',
+  fontSize: '0.92rem',
+  fontWeight: 950,
+  boxShadow: '0 12px 28px rgba(16,38,67,0.08)',
+  cursor: 'pointer',
+  fontFamily: 'inherit'
+};
+
+const Sidebar = ({ selectedState, savedProfiles, onSelectState, isSubscribed, onOpenDashboard, onSignOut }) => {
+  const items = ['Overview'];
+  return (
+    <aside className="ai-sidebar" style={{ position: 'sticky', top: 0, height: '100vh', background: 'rgba(255,255,255,0.78)', borderRight: '1px solid #dce8f3', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.65rem', padding: '1.6rem 0.85rem', backdropFilter: 'blur(16px)' }}>
+      <button
+        type="button"
+        onClick={() => {
+          if (!isSubscribed) return;
+          document.title = `ai-economy-impact-${String(selectedState || 'state').toLowerCase().replace(/\s+/g, '-')}`;
+          window.print();
+        }}
+        disabled={!isSubscribed}
+        title={isSubscribed ? 'Download PDF' : 'Subscribe to download PDF reports'}
+        style={{ width: '100%', minHeight: 76, border: 0, borderRadius: 10, background: isSubscribed ? '#eaf3ff' : '#f3f7fc', color: isSubscribed ? '#0d6efd' : '#7c8ea2', textDecoration: 'none', display: 'grid', placeItems: 'center', textAlign: 'center', fontWeight: 900, fontSize: '0.76rem', padding: '0.65rem 0.35rem', marginBottom: '1rem', cursor: isSubscribed ? 'pointer' : 'not-allowed', fontFamily: 'inherit', opacity: isSubscribed ? 1 : 0.72 }}
+      >
+        <span>
+          <span style={{ display: 'block', fontSize: '1rem', marginBottom: 6 }}>{isSubscribed ? 'PDF' : 'LOCK'}</span>
+          Download PDF
+        </span>
+      </button>
+      {items.map((item, index) => (
+        <a key={item} href={item === 'Projects' ? '#projects' : '#'} style={{ width: '100%', minHeight: 64, border: 0, borderLeft: index === 0 ? '4px solid #1f7cff' : '4px solid transparent', borderRadius: 10, background: index === 0 ? '#eaf3ff' : 'transparent', color: index === 0 ? '#0d6efd' : '#48617d', fontWeight: 800, fontSize: '0.76rem', cursor: item === 'Projects' ? 'pointer' : 'default', textDecoration: 'none', display: 'grid', placeItems: 'center', textAlign: 'center' }}>
+          <span style={{ display: 'block', fontSize: '1rem', marginBottom: 5 }}>{navIcon(item)}</span>
+          {item}
+        </a>
+      ))}
+      <div style={{ width: '100%', borderTop: '1px solid #dce8f3', paddingTop: '0.8rem', marginTop: '0.25rem' }}>
+        <p style={{ margin: '0 0 0.45rem', color: '#48617d', fontSize: '0.66rem', fontWeight: 950, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2 }}>Saved Profiles</p>
+        {!isSubscribed ? (
+          <p style={{ margin: 0, color: '#7c8ea2', fontSize: '0.68rem', fontWeight: 750, textAlign: 'center', lineHeight: 1.3 }}>Subscribe to save and compare profiles.</p>
+        ) : savedProfiles.length > 0 ? (
+          <div style={{ display: 'grid', gap: '0.35rem' }}>
+            {savedProfiles.map((state) => (
+              <button
+                key={state}
+                type="button"
+                onClick={() => onSelectState(state)}
+                style={{ width: '100%', border: '1px solid #dce8f3', borderRadius: 9, background: state === selectedState ? '#fff0f3' : '#fff', color: state === selectedState ? '#d6335c' : '#0d315f', padding: '0.5rem 0.35rem', fontSize: '0.72rem', fontWeight: 900, lineHeight: 1.15, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                {state}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p style={{ margin: 0, color: '#7c8ea2', fontSize: '0.68rem', fontWeight: 750, textAlign: 'center', lineHeight: 1.3 }}>Tap the heart by a state to save it.</p>
+        )}
+      </div>
+      {isSubscribed && (
+        <>
+          <button
+            type="button"
+            onClick={onOpenDashboard}
+            style={{ width: '100%', minHeight: 54, border: '1px solid #9bc4ff', borderRadius: 10, background: '#eaf3ff', color: '#0d6efd', display: 'grid', placeItems: 'center', textAlign: 'center', fontWeight: 900, fontSize: '0.74rem', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 10px 24px rgba(13,110,253,0.12)' }}
+          >
+            <span>
+              <span style={{ display: 'block', fontSize: '0.92rem', marginBottom: 5 }}>DB</span>
+              Dashboard
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={onSignOut}
+            style={{ width: '100%', minHeight: 54, border: '1px solid #cddceb', borderRadius: 10, background: '#fff', color: '#48617d', display: 'grid', placeItems: 'center', textAlign: 'center', fontWeight: 900, fontSize: '0.74rem', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 10px 24px rgba(16,38,67,0.06)' }}
+          >
+            <span>
+              <span style={{ display: 'block', fontSize: '0.92rem', marginBottom: 5 }}>OUT</span>
+              Sign Out
+            </span>
+          </button>
+        </>
+      )}
+    </aside>
+  );
+};
+
+const StatePicker = ({ selectedState, stateNames, onSelectState }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const abbreviation = states.find(([name]) => name === selectedState)?.[1] || '';
+
+  return (
+    <div style={{ position: 'relative', minWidth: 250 }}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        aria-expanded={isOpen}
+        style={{ width: '100%', minHeight: 56, border: '1px solid #cddceb', borderRadius: 10, background: '#fff', color: '#071a33', padding: '0.85rem 1rem', fontSize: '1rem', fontWeight: 900, boxShadow: '0 10px 25px rgba(25, 62, 111, 0.08)', cursor: 'pointer', fontFamily: 'inherit', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '0.75rem', alignItems: 'center', textAlign: 'left' }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedState} ({abbreviation})</span>
+        <span style={{ color: '#6b7d91', fontSize: '0.85rem' }}>v</span>
+      </button>
+      {isOpen && (
+        <div className="ai-state-picker-menu" style={{ position: 'absolute', zIndex: 20, top: 'calc(100% + 0.45rem)', left: 0, right: 0, maxHeight: 360, overflowY: 'auto', border: '1px solid #cddceb', borderRadius: 12, background: '#fff', boxShadow: '0 20px 45px rgba(24, 49, 83, 0.18)', padding: '0.45rem' }}>
+          {stateNames.map((state) => {
+            const abbr = states.find(([name]) => name === state)?.[1] || '';
+            const active = state === selectedState;
+            return (
+              <button
+                key={state}
+                type="button"
+                onClick={() => {
+                  onSelectState(state);
+                  setIsOpen(false);
+                }}
+                style={{ width: '100%', border: 0, borderRadius: 8, background: active ? '#0d6efd' : '#fff', color: active ? '#fff' : '#0b1f3a', padding: '0.78rem 0.85rem', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '0.75rem', alignItems: 'center', textAlign: 'left', fontSize: '0.98rem', fontWeight: 850, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <span>{state}</span>
+                <span style={{ opacity: active ? 0.9 : 0.62, fontSize: '0.78rem', fontWeight: 950 }}>{abbr}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MetricStripCard = ({ title, metric, accent, icon, sub }) => {
+  const value = formatMetricValue(metric);
+  const spark = sparkPoints(title);
+  return (
+    <article style={{ padding: '1.45rem 1.45rem 1.45rem', minHeight: 176, borderRight: '1px solid #dbe7f3', background: '#fff', display: 'grid', gridTemplateRows: '1fr 36px', rowGap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '58px minmax(0, 1fr)', alignItems: 'start', gap: '0.95rem' }}>
+        <span style={{ width: 58, height: 58, borderRadius: '50%', display: 'grid', placeItems: 'center', background: `${accent}16`, color: accent, fontWeight: 900, fontSize: '0.7rem', flex: '0 0 auto' }}>{icon}</span>
+        <div>
+          <p style={{ margin: 0, color: accent, fontSize: '0.76rem', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'normal' }}>{title}</p>
+          <strong style={{ display: 'block', marginTop: 8, color: '#071a33', fontSize: value === pendingText ? '1.05rem' : '1.86rem', lineHeight: 1.02, letterSpacing: 0 }}>{value}</strong>
+          <span style={{ display: 'block', marginTop: 8, color: '#20344e', fontSize: '0.95rem', fontWeight: 800 }}>{sub}</span>
+        </div>
+      </div>
+      <div style={{ height: 36, display: 'flex', alignItems: 'flex-end' }}>
+        {title === 'Active Data Centers' ? (
+          <svg viewBox="0 0 180 34" preserveAspectRatio="none" style={{ width: '100%', height: 34, display: 'block' }}>
+            <path d={`${spark} L180 34 L0 34 Z`} fill={`${accent}14`} />
+            <path d={spark} fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : (
+          <div style={{ width: '100%', height: 6, borderRadius: 99, background: `${accent}24`, overflow: 'hidden', marginBottom: 8 }}>
+            <div style={{ width: `${Math.max(42, Math.min(88, parseNumber(metric?.value) || 68))}%`, height: '100%', background: accent, borderRadius: 99 }} />
+          </div>
+        )}
+      </div>
+    </article>
+  );
+};
+
+const FacilityCard = ({ title, metric, details, imageUrl }) => (
+  <article style={{ ...panel, padding: '1.5rem' }}>
+    <SectionLabel>{title}</SectionLabel>
+    <h2 style={{ margin: '0.3rem 0 1rem', color: '#071a33', fontSize: '1.55rem', lineHeight: 1.15 }}>{formatMetricValue(metric)}</h2>
+    <div className="ai-facility-grid" style={{ display: 'grid', gridTemplateColumns: '220px minmax(0, 1fr)', gap: '1.35rem', alignItems: 'start' }}>
+      <div
+        role={imageUrl ? 'img' : undefined}
+        aria-label={imageUrl ? `${formatMetricValue(metric)} building` : undefined}
+        style={{
+          minHeight: 270,
+          borderRadius: 10,
+          background: imageUrl ? `url("${imageUrl}") center / cover no-repeat` : 'linear-gradient(155deg, #15253b, #5c7fa8 55%, #d5e7f8)',
+          boxShadow: imageUrl ? '0 16px 35px rgba(24, 49, 83, 0.18)' : 'inset 0 -35px 55px rgba(0,0,0,0.22)'
+        }}
+      />
+      <DetailList items={details} />
+    </div>
+  </article>
+);
+
+const ProjectCard = ({ title, metric, details, mapUrl }) => (
+  <article style={{ ...panel, padding: 0, overflow: 'hidden' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: mapUrl ? 'minmax(0, 1fr) minmax(280px, 42%)' : '1fr', minHeight: 300 }}>
+      <div style={{ padding: '1.5rem' }}>
+        <SectionLabel>{title}</SectionLabel>
+        <h2 style={{ margin: '0.3rem 0 1rem', color: '#071a33', fontSize: '1.55rem', lineHeight: 1.15 }}>{formatMetricValue(metric)}</h2>
+        <DefinitionList items={splitProjectDetails(details).facts} />
+      </div>
+      {mapUrl && (
+        <div
+          role="img"
+          aria-label={`${formatMetricValue(metric)} location map`}
+          style={{
+            minHeight: 300,
+            background: `linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.05)), url("${mapUrl}") center / cover no-repeat`
+          }}
+        />
+      )}
+    </div>
+    <div style={{ borderTop: '1px solid #dce8f3', padding: '1.2rem 1.5rem', background: 'rgba(255,255,255,0.72)' }}>
+      <h3 style={{ margin: '0 0 0.8rem', color: '#1f7cff', fontSize: '0.95rem' }}>Project Highlights</h3>
+      <DetailList items={splitProjectDetails(details).highlights} columns />
+    </div>
+  </article>
+);
+
+const CurrentProjectsPanel = ({ projects, state }) => (
+  <article style={{ ...panel, padding: '1.45rem' }}>
+    <PanelHeader title="More Current Projects" badge={state} />
+    <div className="ai-current-projects-grid" style={{ display: 'grid', gridTemplateColumns: projects.length === 4 ? 'repeat(3, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+      {projects.map((project, index) => (
+        <CurrentProjectCard key={project.title} project={project} featured={projects.length === 4 && index === 0} />
+      ))}
+    </div>
+  </article>
+);
+
+const CurrentProjectCard = ({ project, featured = false }) => (
+  <section className="ai-current-project-card" style={{ border: '1px solid #dce8f3', borderRadius: 12, overflow: 'hidden', background: '#fff', gridColumn: featured ? '1 / -1' : 'auto' }}>
+    <div
+      role={project.imageUrl ? 'img' : undefined}
+      aria-label={project.imageUrl ? project.title : undefined}
+      style={{
+        height: 170,
+        background: project.imageUrl ? `url("${project.imageUrl}") center / cover no-repeat` : 'linear-gradient(135deg, #dbeafe, #f8fbff 55%, #bfdbfe)',
+        borderBottom: '1px solid #dce8f3'
+      }}
+    />
+    <div style={{ padding: '1rem' }}>
+      <h3 style={{ margin: '0 0 0.8rem', color: '#071a33', fontSize: '1.05rem', lineHeight: 1.25 }}>{project.title}</h3>
+      <DefinitionList items={project.details || []} />
+    </div>
+  </section>
+);
+
+const JobsPanel = ({ impact }) => {
+  return (
+    <article style={{ ...panel, padding: '1.45rem' }}>
+      <PanelHeader title="Jobs Lost to AI Replacement vs Jobs Created" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+        <JobSummary title="Jobs Lost" value={impact.jobsLost} subtitle="Finance, Administrative, Legal" color="#ff4d67" icon="LOSS" />
+        <JobSummary title="Jobs Created" value={impact.jobsCreated} subtitle="AI Specialists" color="#17b978" icon="GAIN" />
+        <JobSummary title="Net Change" value={impact.netChange} subtitle="Overall Impact" color="#8f45db" icon="NET" />
+      </div>
+    </article>
+  );
+};
+
+const JobBreakdownPanel = ({ impact }) => {
+  const lost = parseNumber(impact.jobsLost);
+  const created = parseNumber(impact.jobsCreated);
+  const rows = [
+    { label: 'Finance', value: -Math.round(lost * 0.28), color: '#ff5a6e' },
+    { label: 'Administrative', value: -Math.round(lost * 0.35), color: '#ff5a6e' },
+    { label: 'Legal', value: -Math.round(lost * 0.15), color: '#ff5a6e' },
+    { label: 'IT & Tech', value: Math.round(created * 0.56), color: '#12b76a' },
+    { label: 'AI Specialists', value: Math.round(created), color: '#12b76a' },
+    { label: 'Data Engineers', value: Math.round(created * 0.44), color: '#12b76a' },
+    { label: 'Other Tech Roles', value: Math.round(created * 0.5), color: '#12b76a' }
+  ];
+  const max = Math.max(...rows.map((row) => Math.abs(row.value)), 1);
+
+  return (
+    <article style={{ ...panel, padding: '1.45rem' }}>
+      <PanelHeader title="Job Impact Breakdown" />
+      <div style={{ display: 'grid', gap: '0.65rem', marginTop: '0.6rem' }}>
+        {rows.map((row) => (
+          <ImpactRow key={row.label} row={row} max={max} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', color: '#526982', fontSize: '0.82rem', fontWeight: 800, marginTop: '1.1rem' }}>
+        <span>-40K</span>
+        <span style={{ textAlign: 'center' }}>0</span>
+        <span style={{ textAlign: 'right' }}>+20K</span>
+      </div>
+      <p style={{ margin: '0.5rem 0 0', textAlign: 'center', color: '#526982', fontSize: '0.82rem', fontWeight: 800 }}>Net Job Change</p>
+    </article>
+  );
+};
+
+const JobSummary = ({ title, value, subtitle, color, icon }) => (
+  <section style={{ padding: '0.9rem 1.1rem', borderRight: title === 'Net Change' ? 0 : '1px solid #dce8f3' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '54px minmax(0, 1fr)', gap: '0.9rem', alignItems: 'start' }}>
+      <span style={{ width: 54, height: 54, borderRadius: 12, display: 'grid', placeItems: 'center', background: `${color}18`, color, fontSize: '0.68rem', fontWeight: 900 }}>{icon}</span>
+      <div>
+        <p style={{ margin: 0, color, fontSize: '0.78rem', fontWeight: 900, textTransform: 'uppercase' }}>{title}</p>
+        <strong style={{ display: 'block', marginTop: '0.45rem', color: '#071a33', fontSize: '2rem', lineHeight: 1.05 }}>{value || pendingText}</strong>
+        <p style={{ margin: '0.55rem 0 0', color: '#344b65', fontSize: '0.95rem', fontWeight: 800, lineHeight: 1.45 }}>{subtitle}</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 180 46" preserveAspectRatio="none" style={{ width: '100%', height: 54, marginTop: '1.05rem', display: 'block' }}>
+      <path d={`${jobSpark(title)} L180 46 L0 46 Z`} fill={`${color}14`} />
+      <path d={jobSpark(title)} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  </section>
+);
+
+const ImpactRow = ({ row, max }) => {
+  const isNegative = row.value < 0;
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '120px minmax(0, 1fr) 78px', alignItems: 'center', gap: '0.7rem', color: '#344b65', fontSize: '0.9rem', fontWeight: 800 }}>
+      <span>{row.label}</span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'center', gap: 0 }}>
+        <div style={{ height: 18, display: 'flex', justifyContent: 'flex-end' }}>
+          {isNegative && <div style={{ width: `${(Math.abs(row.value) / max) * 100}%`, height: '100%', background: row.color, borderRadius: '4px 0 0 4px' }} />}
+        </div>
+        <div style={{ height: 18, borderLeft: '1px solid #cbd9e7' }}>
+          {!isNegative && <div style={{ width: `${(Math.abs(row.value) / max) * 100}%`, height: '100%', background: row.color, borderRadius: '0 4px 4px 0' }} />}
+        </div>
+      </div>
+      <span style={{ textAlign: 'right', color: isNegative ? '#526982' : '#087443' }}>{row.value > 0 ? '+' : ''}{row.value.toLocaleString('en-US')}</span>
+    </div>
+  );
+};
+
+const EnvironmentPanel = ({ impact }) => (
+  <article style={{ ...panel, padding: '1.45rem' }}>
+    <PanelHeader title="Environmental Impact" />
+    <div className="ai-env-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+      <EnvironmentalVisualCard type="land" title="Land Usage" value={impact.landUsage} color="#17b978" details={impact.landUsageDetails || []} />
+      <EnvironmentalVisualCard type="water" title="Water Impact" value={impact.waterImpact} color="#139cf7" details={impact.waterImpactDetails || []} />
+    </div>
+    <EnvironmentalConcern items={impact.environmentalConcerns || []} />
+  </article>
+);
+
+const EnvironmentalVisualCard = ({ type, title, value, color, details }) => (
+  <section style={{ border: '1px solid #dce8f3', borderRadius: 12, background: '#fff', padding: '1.15rem', minHeight: 230 }}>
+    <div className="ai-env-card-grid" style={{ display: 'grid', gridTemplateColumns: type === 'land' ? 'minmax(0, 1fr) 230px' : 'minmax(0, 0.8fr) minmax(220px, 1.2fr)', gap: '1rem', alignItems: 'center' }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center', marginBottom: '0.7rem' }}>
+          <span style={{ width: 54, height: 54, borderRadius: '50%', display: 'grid', placeItems: 'center', background: `${color}18`, color, fontSize: '0.75rem', fontWeight: 900 }}>{type === 'land' ? 'LAND' : 'H2O'}</span>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, color: '#34516f', fontSize: '0.85rem', fontWeight: 900, textTransform: 'uppercase' }}>{title}</p>
+            <strong style={{ display: 'block', marginTop: 8, color: '#071a33', fontSize: 'clamp(1.25rem, 2vw, 1.7rem)', lineHeight: 1.12, maxWidth: type === 'land' ? 440 : 320 }}>{value || pendingText}</strong>
+          </div>
+        </div>
+        {details.length > 0 && (
+          <ul style={{ margin: '0.6rem 0 0', paddingLeft: '1.1rem', color: '#344b65', fontSize: '0.92rem', lineHeight: 1.55, fontWeight: 750 }}>
+            {details.slice(0, 3).map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        )}
+      </div>
+      {type === 'land' ? <DonutGraphic color={color} /> : <WaterAreaGraphic color={color} />}
+    </div>
+  </section>
+);
+
+const DonutGraphic = ({ color }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: '92px minmax(0, 1fr)', gap: '0.9rem', alignItems: 'center' }}>
+    <div style={{ width: 92, height: 92, borderRadius: '50%', background: `conic-gradient(${color} 0 30%, #49c994 30% 70%, #a9e8c7 70% 100%)`, position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 22, borderRadius: '50%', background: '#fff' }} />
+    </div>
+    <div style={{ display: 'grid', gap: '0.45rem', color: '#34516f', fontSize: '0.82rem', fontWeight: 800 }}>
+      <Legend color="#a9e8c7" label="Manhattan Core" value="30%" />
+      <Legend color="#49c994" label="Outer Boroughs" value="40%" />
+      <Legend color={color} label="Metro Area" value="30%" />
+    </div>
+  </div>
+);
+
+const Legend = ({ color, label, value }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: '12px 1fr auto', gap: '0.45rem', alignItems: 'center' }}>
+    <span style={{ width: 10, height: 10, borderRadius: '50%', background: color }} />
+    <span>{label}</span>
+    <span>{value}</span>
+  </div>
+);
+
+const WaterAreaGraphic = ({ color }) => (
+  <svg viewBox="0 0 240 130" preserveAspectRatio="none" style={{ width: '100%', height: 130, display: 'block' }}>
+    <defs>
+      <linearGradient id="waterFill" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stopColor={color} stopOpacity="0.45" />
+        <stop offset="100%" stopColor={color} stopOpacity="0.06" />
+      </linearGradient>
+    </defs>
+    <path d="M0 111 C12 96 20 88 32 94 C45 101 53 89 64 92 C78 96 84 76 96 80 C110 84 118 79 130 82 C144 86 151 58 164 60 C178 62 184 51 196 45 C210 38 218 45 228 39 C235 35 238 28 240 22 L240 130 L0 130 Z" fill="url(#waterFill)" />
+    <path d="M0 111 C12 96 20 88 32 94 C45 101 53 89 64 92 C78 96 84 76 96 80 C110 84 118 79 130 82 C144 86 151 58 164 60 C178 62 184 51 196 45 C210 38 218 45 228 39 C235 35 238 28 240 22" fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const EnvironmentalConcern = ({ items }) => (
+  <section style={{ border: '1px solid #dce8f3', borderRadius: 12, background: '#f8fbff', padding: '1rem 1.15rem', display: 'grid', gridTemplateColumns: '54px minmax(0, 1fr)', gap: '0.9rem', alignItems: 'center' }}>
+    <span style={{ width: 42, height: 42, borderRadius: 10, display: 'grid', placeItems: 'center', color: '#56718d', border: '1px solid #c9d9e9', fontWeight: 900 }}>ENV</span>
+    <div>
+      <p style={{ margin: '0 0 0.35rem', color: '#34516f', fontSize: '0.82rem', fontWeight: 900, textTransform: 'uppercase' }}>Environmental Concerns</p>
+      <p style={{ margin: 0, color: '#344b65', fontSize: '0.98rem', fontWeight: 800, lineHeight: 1.45 }}>
+        {(items.length ? items : ['No reviewed environmental concerns are available yet.']).join(', ')}
+      </p>
+    </div>
+  </section>
+);
+
+const normalizeElectricityHousingBlocks = (blocks) => {
+  if (!Array.isArray(blocks)) return [];
+  if (blocks.length === 1 && blocks[0]?.title === 'Overview') {
+    const grouped = {
+      electricity: { title: 'ELECTRICITY BILLS', items: [] },
+      housing: { title: 'PROPERTY VALUES & HOUSING', items: [] },
+      taxes: { title: 'TAXES & STATE SERVICES', items: [] }
+    };
+    (blocks[0].items || []).forEach((item) => {
+      const [rawTitle, ...rest] = String(item).split(':');
+      const label = rawTitle?.trim();
+      const value = rest.join(':').trim() || String(item);
+      if (label === 'Electricity') grouped.electricity.items.push(value);
+      else if (label === 'Housing') grouped.housing.items.push(value);
+      else grouped.taxes.items.push(label ? `${label}: ${value}` : value);
+    });
+    return [grouped.electricity, grouped.housing, grouped.taxes].filter((block) => block.items.length > 0);
+  }
+  return blocks;
+};
+
+const ElectricityHousingTaxesPanel = ({ blocks, state }) => {
+  const normalizedBlocks = normalizeElectricityHousingBlocks(blocks);
+  const primaryBlocks = normalizedBlocks.slice(0, 3);
+  const summaryText = buildElectricityHousingSummary(normalizedBlocks, state);
+  const outlook = getElectricityHousingOutlook(normalizedBlocks);
+
+  return (
+    <article style={{ background: '#fff', border: '1px solid #d7e4f2', borderRadius: 14, boxShadow: '0 18px 48px rgba(18, 38, 63, 0.08)', padding: '1.55rem' }}>
+      <div className="ai-eht-header" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '1rem', alignItems: 'center', marginBottom: '1.65rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <span style={{ width: 64, height: 64, borderRadius: '50%', background: '#eaf3ff', color: '#0d6efd', display: 'grid', placeItems: 'center', fontSize: '1.35rem', fontWeight: 950, boxShadow: 'inset 0 0 0 1px #cfe0ff' }}>HT</span>
+          <div>
+            <h2 style={{ margin: 0, color: '#0b1f3a', fontSize: 'clamp(1.9rem, 3vw, 2.55rem)', lineHeight: 1.05, letterSpacing: 0 }}>Electricity, Housing & Taxes</h2>
+            <p style={{ margin: '0.5rem 0 0', color: '#5d6f88', fontSize: '1rem', fontWeight: 650 }}>Key infrastructure, housing market, and tax factors shaping {state}'s economic landscape.</p>
+          </div>
+        </div>
+        <span style={{ minHeight: 46, border: '1px solid #dce8f3', borderRadius: 999, padding: '0 1rem', display: 'inline-flex', gap: '0.65rem', alignItems: 'center', color: '#0b1f3a', background: '#fff', boxShadow: '0 10px 26px rgba(18, 38, 63, 0.08)', fontWeight: 900 }}>
+          <span style={{ color: '#0d6efd' }}>*</span>
+          {state}
+        </span>
+      </div>
+
+      <div className="ai-eht-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '1.35rem' }}>
+        {primaryBlocks.map((block, index) => <ElectricityHousingCard key={`${block.title}-${index}`} block={block} index={index} />)}
+      </div>
+
+      <div className="ai-eht-summary" style={{ marginTop: '1.35rem', border: '1px solid #d7e4f2', borderRadius: 12, background: '#f8fbff', padding: '1rem', display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) repeat(3, minmax(170px, 0.55fr))', gap: '1rem', alignItems: 'center', boxShadow: '0 10px 26px rgba(18, 38, 63, 0.05)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '54px minmax(0, 1fr)', gap: '0.9rem', alignItems: 'center' }}>
+          <span style={{ width: 44, height: 44, borderRadius: 12, display: 'grid', placeItems: 'center', background: '#eaf3ff', color: '#0d6efd', fontSize: '0.72rem', fontWeight: 950 }}>SUM</span>
+          <div>
+            <h3 style={{ margin: 0, color: '#0d6efd', fontSize: '0.9rem', fontWeight: 950, textTransform: 'uppercase' }}>Overall Impact Summary</h3>
+            <p style={{ margin: '0.35rem 0 0', color: '#344b65', fontSize: '0.92rem', lineHeight: 1.45, fontWeight: 700 }}>{summaryText}</p>
+          </div>
+        </div>
+        {outlook.map((item) => (
+          <div key={item.label} style={{ borderLeft: '1px solid #d7e4f2', paddingLeft: '1rem', display: 'grid', gridTemplateColumns: '46px minmax(0, 1fr)', gap: '0.75rem', alignItems: 'center' }}>
+            <span aria-hidden="true" style={{ width: 42, height: 42, borderRadius: '50%', background: `${item.color}16`, color: item.color, display: 'grid', placeItems: 'center' }}>
+              <span style={{ width: 12, height: 12, borderRadius: '50%', background: item.color }} />
+            </span>
+            <div>
+              <p style={{ margin: 0, color: item.color, fontSize: '0.74rem', fontWeight: 950, textTransform: 'uppercase' }}>{item.label}</p>
+              <strong style={{ display: 'block', marginTop: 3, color: '#0b1f3a', fontSize: '1rem', lineHeight: 1.15 }}>{item.value}</strong>
+              <span style={{ display: 'block', marginTop: 3, color: '#5d6f88', fontSize: '0.78rem', fontWeight: 750 }}>{item.note}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+};
+
+const electricityHousingThemes = [
+  {
+    accent: '#0d6efd',
+    icon: 'EB',
+    title: 'Electricity & Infrastructure',
+    description: 'Energy costs, grid reliability, and infrastructure investments impacting data centers and growth.',
+    visual: '',
+    takeaway: 'Costs rising but infrastructure investments may improve reliability over time.'
+  },
+  {
+    accent: '#168f4f',
+    icon: 'PV',
+    title: 'Property Values & Housing',
+    description: 'Housing market trends, price drivers, and outlook for local communities.',
+    visual: '',
+    takeaway: 'Growth may create a short-term boom, followed by correction risk in later years.'
+  },
+  {
+    accent: '#f08c00',
+    icon: 'T&S',
+    title: 'Taxes & State Services',
+    description: 'Tax structure, incentives, and public services impacting businesses and residents.',
+    visual: '',
+    takeaway: 'Low taxes can drive growth but strain state services and long-term budgets.'
+  }
+];
+
+const ElectricityHousingCard = ({ block, index }) => {
+  const theme = electricityHousingThemes[index] || electricityHousingThemes[index % electricityHousingThemes.length];
+  return (
+    <section style={{ border: `1px solid ${theme.accent}2e`, borderRadius: 12, background: '#fff', overflow: 'hidden', minHeight: 520, boxShadow: `0 14px 30px ${theme.accent}10` }}>
+      <div style={{ minHeight: 116, background: `linear-gradient(135deg, ${theme.accent}10, #ffffff 62%)`, borderBottom: `1px solid ${theme.accent}24`, padding: '1.25rem', display: 'grid', gridTemplateColumns: '64px minmax(0, 1fr) 44px', gap: '0.9rem', alignItems: 'center' }}>
+        <span style={{ width: 56, height: 56, borderRadius: '50%', background: `${theme.accent}12`, color: theme.accent, display: 'grid', placeItems: 'center', fontSize: '0.95rem', fontWeight: 950, boxShadow: `inset 0 0 0 1px ${theme.accent}35` }}>{theme.icon}</span>
+        <div>
+          <h3 style={{ margin: 0, color: theme.accent, fontSize: '1rem', lineHeight: 1.18, fontWeight: 950, textTransform: 'uppercase' }}>{theme.title}</h3>
+          <p style={{ margin: '0.45rem 0 0', color: '#344b65', fontSize: '0.85rem', lineHeight: 1.45, fontWeight: 650 }}>{theme.description}</p>
+        </div>
+        <span style={{ color: `${theme.accent}66`, fontSize: '2rem', fontWeight: 800, textAlign: 'right' }}>{theme.visual}</span>
+      </div>
+      <div style={{ padding: '1.15rem 1.25rem', display: 'grid', gap: '0.2rem' }}>
+        {(block.items || []).map((item, itemIndex) => (
+          <ElectricityHousingRow key={`${block.title}-${itemIndex}`} item={item} accent={theme.accent} index={itemIndex} />
+        ))}
+      </div>
+      <div style={{ margin: '0 1.25rem 1.25rem', border: `1px solid ${theme.accent}22`, borderRadius: 10, background: `linear-gradient(135deg, ${theme.accent}0f, #fff)`, padding: '0.9rem 1rem', display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr)', gap: '0.7rem', alignItems: 'start' }}>
+        <span style={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${theme.accent}`, color: theme.accent, display: 'grid', placeItems: 'center', fontSize: '0.72rem', fontWeight: 950 }}>i</span>
+        <div>
+          <p style={{ margin: 0, color: theme.accent, fontSize: '0.78rem', fontWeight: 950, textTransform: 'uppercase' }}>Key Takeaway</p>
+          <p style={{ margin: '0.3rem 0 0', color: '#253d5b', fontSize: '0.84rem', lineHeight: 1.42, fontWeight: 700 }}>{theme.takeaway}</p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ElectricityHousingRow = ({ item, accent, index }) => {
+  const text = String(item);
+  const [rawLabel, ...rest] = text.split(':');
+  const hasLabel = rest.length > 0 && rawLabel.length < 42;
+  const label = hasLabel ? rawLabel : null;
+  const value = hasLabel ? rest.join(':').trim() : text;
+  const badge = getElectricityHousingBadge(text);
+
+  return (
+    <div style={{ minHeight: 38, borderBottom: '1px solid #e8eef6', display: 'grid', gridTemplateColumns: '22px minmax(0, 1fr) auto', gap: '0.55rem', alignItems: 'center', color: '#102643', fontSize: '0.84rem', lineHeight: 1.45, fontWeight: 750 }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, display: 'block', justifySelf: 'center' }} />
+      <span>
+        {label && <strong>{label}: </strong>}
+        {value}
+      </span>
+      {badge && <span style={{ borderRadius: 999, background: `${accent}12`, color: accent, padding: '0.28rem 0.65rem', fontSize: '0.68rem', fontWeight: 950, whiteSpace: 'nowrap' }}>{badge}</span>}
+    </div>
+  );
+};
+
+const getElectricityHousingBadge = (text) => {
+  const upper = String(text).toUpperCase();
+  if (upper.includes('CRITICAL') || upper.includes('CATASTROPHIC') || upper.includes('EMERGENCY')) return 'HIGH RISK';
+  if (upper.includes('MODERATE')) return 'MODERATE';
+  if (upper.includes('LOWEST') || upper.includes('LOW ')) return 'LOW';
+  if (upper.includes('$1B')) return '$1B+';
+  if (upper.includes('$500M')) return '$500M+';
+  if (upper.includes('STRAIN')) return 'STRAINED';
+  return null;
+};
+
+const buildElectricityHousingSummary = (blocks, state) => {
+  const text = blocks.flatMap((block) => block.items || []).join(' ');
+  const risk = /CRITICAL|CATASTROPHIC|EMERGENCY/i.test(text) ? 'high infrastructure pressure' : /MODERATE/i.test(text) ? 'moderate infrastructure pressure' : 'localized infrastructure pressure';
+  return `${state} shows ${risk} across utility costs, housing movement, and public budgets as data center demand expands.`;
+};
+
+const getElectricityHousingOutlook = (blocks) => {
+  const text = blocks.flatMap((block) => block.items || []).join(' ');
+  const highRisk = /CRITICAL|CATASTROPHIC|EMERGENCY/i.test(text);
+  const moderate = /MODERATE|STRAIN/i.test(text);
+  const housingActive = /Boom|\+15|\+20|\+25|strong/i.test(text);
+  return [
+    { label: 'Infrastructure Risk', value: highRisk ? 'High' : moderate ? 'Moderate' : 'Watch', note: highRisk ? 'Capacity stress' : moderate ? 'Improving' : 'Monitor', color: '#0d6efd' },
+    { label: 'Housing Outlook', value: housingActive ? 'Active' : 'Stable', note: housingActive ? 'Boom/bust risk' : 'Limited volatility', color: '#16a34a' },
+    { label: 'Fiscal Outlook', value: highRisk || moderate ? 'Challenged' : 'Stable', note: highRisk ? 'Budget pressure' : moderate ? 'Long-term strain' : 'Manageable', color: '#f08c00' }
+  ];
+};
+
+const ResilienceDashboardPanel = ({ dashboard, state }) => {
+  const [activeCard, setActiveCard] = useState(null);
+  const scenarios = dashboard?.consequenceScenarios || {};
+  const costItems = [
+    dashboard?.costOfInaction && `Cost of inaction: ${dashboard.costOfInaction}`,
+    dashboard?.costOfAction && `Cost of action: ${dashboard.costOfAction}`,
+    dashboard?.roi && `ROI: ${dashboard.roi}`,
+    dashboard?.recommendation && `Recommendation: ${dashboard.recommendation}`,
+    dashboard?.mitigation && `Mitigation: ${dashboard.mitigation}`
+  ].filter(Boolean);
+  const scoreParts = parseResilienceScore(dashboard?.resilienceScore);
+  const cards = [
+    { number: 1, title: 'Data Center Reality Check', items: dashboard?.dataCenterRealityCheck, accent: '#1f7cff', icon: 'DC', chart: 'line' },
+    { number: 2, title: 'Vulnerability Factors', items: dashboard?.vulnerabilityFactors, accent: '#f08c00', icon: 'VF', chart: 'bars' },
+    { number: 3, title: 'What Needs To Happen', items: dashboard?.needsToHappen, accent: '#12b76a', icon: 'GO', chart: 'rise' },
+    { number: 4, title: 'Timeline', items: dashboard?.timeline, accent: '#7c3aed', icon: 'YR', chart: 'steps' },
+    { number: 5, title: 'If Nothing Changes', items: scenarios?.inaction, accent: '#e03131', icon: '!', chart: 'fall' },
+    { number: 6, title: 'If The State Acts Now', items: scenarios?.action, accent: '#0b8fa3', icon: 'ACT', chart: 'up' },
+    { number: 7, title: 'Cost And ROI', items: costItems, accent: '#1267e8', icon: 'ROI', chart: 'cost' }
+  ];
+
+  return (
+    <article style={{ background: '#fff', border: '1px solid #dce8f3', borderRadius: 14, boxShadow: '0 18px 50px rgba(18, 38, 63, 0.08)', padding: '1.45rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '1.35rem' }}>
+        <div>
+          <h2 style={{ margin: 0, color: '#0b1f3a', fontSize: '1.85rem', lineHeight: 1.1 }}>NAiERM Resilience Dashboard</h2>
+          <p style={{ margin: '0.4rem 0 0', color: '#5d6f88', fontSize: '0.98rem', fontWeight: 650 }}>AI infrastructure resilience analysis for data centers and economic impact in {state}</p>
+        </div>
+        <div style={{ textAlign: 'right', minWidth: 170, display: 'grid', justifyItems: 'end', gap: '0.65rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center' }}>
+            <span style={{ borderRadius: 999, background: '#fff1dc', color: '#d46b08', padding: '0.4rem 0.95rem', fontSize: '1.05rem', fontWeight: 950 }}>{scoreParts.score || dashboard?.resilienceScore || 'Score pending'}</span>
+            {scoreParts.risk && <strong style={{ color: '#e8590c', fontSize: '0.95rem' }}>{scoreParts.risk}</strong>}
+          </div>
+          <a href="https://naierm.com" target="_blank" rel="noreferrer" style={{ minHeight: 40, borderRadius: 9, background: '#0d6efd', color: '#fff', textDecoration: 'none', display: 'grid', placeItems: 'center', padding: '0 0.95rem', fontSize: '0.82rem', fontWeight: 900, boxShadow: '0 10px 22px rgba(13, 110, 253, 0.16)', whiteSpace: 'nowrap' }}>
+            Visit NAIERM
+          </a>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(250px, 1fr))', gap: '1rem' }}>
+        {cards.map((card) => <ResilienceBox key={card.title} {...card} onClick={() => setActiveCard(card)} />)}
+      </div>
+      {activeCard && <ResilienceModal card={activeCard} onClose={() => setActiveCard(null)} />}
+      <div style={{ marginTop: '1rem', borderRadius: 10, background: '#eef5ff', color: '#425b7a', padding: '0.9rem 1rem', display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', fontSize: '0.92rem', fontWeight: 650 }}>
+        <span>This dashboard provides a resilience assessment based on current trends and projections. Proactive planning today builds a stronger, more resilient tomorrow.</span>
+        <span style={{ color: '#1267e8', fontWeight: 900, whiteSpace: 'nowrap' }}>Resilience strategies</span>
+      </div>
+    </article>
+  );
+};
+
+const ResilienceBox = ({ number, title, items = [], accent, icon, chart, onClick }) => (
+  <section role="button" tabIndex={0} onClick={onClick} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onClick?.(); } }} style={{ border: `1px solid ${accent}28`, borderRadius: 10, background: '#fff', padding: '1.15rem', minHeight: 330, display: 'grid', gridTemplateRows: 'auto 1fr auto', boxShadow: '0 10px 28px rgba(18, 38, 63, 0.04)', cursor: 'zoom-in', outline: 'none' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1rem' }}>
+      <span style={{ width: 46, height: 46, borderRadius: '50%', display: 'grid', placeItems: 'center', background: `${accent}15`, color: accent, fontWeight: 950, border: `1px solid ${accent}22` }}>{icon}</span>
+      <h3 style={{ margin: 0, color: accent, fontSize: '0.9rem', fontWeight: 950, textTransform: 'uppercase' }}>{number}. {title}</h3>
+    </div>
+    <ResilienceList items={items?.length ? items : ['No reviewed resilience details are available yet.']} accent={accent} />
+    {chart === 'cost' ? <ResilienceCostSummary items={items} accent={accent} /> : <MiniTrend accent={accent} type={chart} />}
+  </section>
+);
+
+const ResilienceModal = ({ card, onClose }) => (
+  <div role="dialog" aria-modal="true" aria-label={card.title} onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(7, 26, 51, 0.52)', backdropFilter: 'blur(6px)', display: 'grid', placeItems: 'center', padding: '2rem' }}>
+    <article onClick={(event) => event.stopPropagation()} style={{ width: 'min(920px, 96vw)', maxHeight: '88vh', overflow: 'auto', borderRadius: 16, background: '#fff', border: `1px solid ${card.accent}35`, boxShadow: '0 28px 80px rgba(0,0,0,0.28)', padding: '1.45rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+          <span style={{ width: 54, height: 54, borderRadius: '50%', display: 'grid', placeItems: 'center', background: `${card.accent}15`, color: card.accent, fontWeight: 950, border: `1px solid ${card.accent}25` }}>{card.icon}</span>
+          <h3 style={{ margin: 0, color: card.accent, fontSize: '1.25rem', fontWeight: 950, textTransform: 'uppercase' }}>{card.number}. {card.title}</h3>
+        </div>
+        <button type="button" onClick={onClose} aria-label="Close card popup" style={{ width: 40, height: 40, borderRadius: 10, border: '1px solid #dce8f3', background: '#f8fbff', color: '#34516f', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 900 }}>X</button>
+      </div>
+      <ResilienceList items={card.items?.length ? card.items : ['No reviewed resilience details are available yet.']} accent={card.accent} />
+      {card.chart === 'cost' ? <ResilienceCostSummary items={card.items} accent={card.accent} /> : <MiniTrend accent={card.accent} type={card.chart} />}
+    </article>
+  </div>
+);
+
+const ResilienceList = ({ items, accent }) => (
+  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: '0.7rem', color: '#263b58', lineHeight: 1.45, fontSize: '0.9rem', fontWeight: 760 }}>
+    {items.map((item) => (
+      <li key={item} style={{ display: 'grid', gridTemplateColumns: '18px minmax(0, 1fr)', gap: '0.65rem', alignItems: 'start' }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, display: 'block', marginTop: 7, justifySelf: 'center' }} />
+        <span>{String(item).replace(/^- /, '')}</span>
+      </li>
+    ))}
+  </ul>
+);
+
+const MiniTrend = ({ accent, type }) => {
+  const path = {
+    bars: null,
+    steps: 'M18 35 H88 H158 H228 H298',
+    fall: 'M10 24 C55 20 85 30 125 31 C165 33 190 45 230 50 C260 55 285 55 320 58',
+    up: 'M10 58 C55 52 80 56 120 48 C160 40 190 48 230 31 C270 15 290 23 320 10',
+    rise: 'M10 58 C55 48 83 42 120 48 C160 54 183 26 220 31 C260 35 282 18 320 12',
+    line: 'M10 53 C50 47 75 50 112 42 C145 34 170 43 205 30 C245 17 270 12 320 20'
+  }[type] || 'M10 53 C50 47 75 50 112 42 C145 34 170 43 205 30 C245 17 270 12 320 20';
+
+  return (
+    <div style={{ height: 58, marginTop: '1rem', borderRadius: 8, background: `linear-gradient(180deg, ${accent}08, ${accent}18)`, overflow: 'hidden' }}>
+      <svg viewBox="0 0 330 68" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+        {type === 'bars'
+          ? [18, 30, 42, 27, 35, 22, 18, 31, 20, 16, 45, 19, 15, 33, 42, 27, 58, 34].map((height, index) => <rect key={index} x={8 + index * 18} y={64 - height} width="12" height={height} rx="2" fill={accent} opacity="0.32" />)
+          : <path d={path} fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />}
+        {type === 'steps' && [18, 88, 158, 228, 298].map((x) => <circle key={x} cx={x} cy="35" r="5" fill={accent} />)}
+      </svg>
+    </div>
+  );
+};
+
+const ResilienceCostSummary = ({ items = [], accent }) => {
+  const visibleItems = items.slice(0, 3);
+  const isSingle = visibleItems.length === 1;
+
+  return (
+    <div style={{ marginTop: '1rem', border: `1px solid ${accent}30`, borderRadius: 8, background: `${accent}08`, padding: isSingle ? '0.8rem 0.9rem' : '0.9rem', display: 'grid', gridTemplateColumns: isSingle ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '0.75rem', textAlign: isSingle ? 'left' : 'center' }}>
+      {visibleItems.map((item, index) => {
+        const [label, ...rest] = String(item).split(':');
+        const value = rest.join(':').trim() || item;
+        const isLast = index === visibleItems.length - 1;
+        return (
+          <div key={item} style={{ borderRight: !isSingle && !isLast ? `1px solid ${accent}25` : 0, paddingRight: !isSingle && !isLast ? '0.5rem' : 0 }}>
+            <span style={{ display: 'block', marginBottom: 5, color: '#425b7a', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase' }}>{label}</span>
+            <strong style={{ display: 'block', color: accent, fontSize: isSingle ? '0.84rem' : '1rem', lineHeight: isSingle ? 1.45 : 1.2, overflowWrap: 'anywhere' }}>{value}</strong>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const parseResilienceScore = (score = '') => {
+  const match = String(score).match(/([0-9.]+\/10)\s*(?:\((.+)\))?/);
+  return { score: match?.[1] || '', risk: match?.[2] || '' };
+};
+
+const RecentNotes = ({ status, projects, additionalItems = [], imageUrl }) => (
+  <article style={{ ...panel, padding: '1.3rem', position: 'relative', overflow: 'hidden' }}>
+    <PanelHeader title="Recent Development Notes" badge={status} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 42%)', gap: '1.2rem', alignItems: 'stretch' }}>
+      <div>
+        <CheckedList items={projects?.length ? projects : ['No reviewed recent project notes are available yet.']} />
+        {additionalItems?.length > 0 && (
+          <div style={{ marginTop: '1rem' }}>
+            <h3 style={{ margin: '0 0 0.65rem', color: '#34516f', fontSize: '0.88rem', fontWeight: 900, textTransform: 'uppercase' }}>Additional Project Information</h3>
+            {additionalItems.map((item) => (
+              <div key={item.title} style={{ marginBottom: '0.8rem' }}>
+                <p style={{ margin: '0 0 0.35rem', color: '#071a33', fontWeight: 900 }}>{item.title}</p>
+                <CheckedList items={item.details || []} small />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div role={imageUrl ? 'img' : undefined} aria-label={imageUrl ? 'Recent development location image' : undefined} style={{ minHeight: 220, alignSelf: 'end', margin: '0 -1.3rem -1.3rem 0', background: imageUrl ? `linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0)), url("${imageUrl}") center / ${String(imageUrl).toLowerCase().includes('maryland') ? 'contain' : 'cover'} no-repeat` : 'linear-gradient(0deg, rgba(19,156,247,0.34), rgba(19,156,247,0.02)), linear-gradient(135deg, transparent 0 55%, rgba(19,156,247,0.13) 55% 56%, transparent 56% 100%)', backgroundColor: '#eef6ff', borderBottomRightRadius: 12, position: 'relative', overflow: 'hidden' }}>
+        {!imageUrl && <Skyline />}
+      </div>
+    </div>
+  </article>
+);
+
+const CheckedList = ({ items, small = false }) => (
+  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: small ? '0.45rem' : '0.9rem', color: '#344b65', lineHeight: 1.55, fontSize: small ? '0.9rem' : '1rem', fontWeight: 750 }}>
+    {(items?.length ? items : ['No reviewed notes are available yet.']).map((item) => (
+      <li key={item} style={{ display: 'grid', gridTemplateColumns: small ? '20px minmax(0, 1fr)' : '28px minmax(0, 1fr)', gap: '0.65rem', alignItems: 'start' }}>
+        <span style={{ width: small ? 14 : 18, height: small ? 14 : 18, borderRadius: '50%', background: '#21c47a', display: 'block', marginTop: small ? 3 : 2, justifySelf: 'center' }} />
+        <span>{String(item).replace(/^- /, '')}</span>
+      </li>
+    ))}
+  </ul>
+);
+
+const Skyline = () => (
+  <svg viewBox="0 0 420 210" preserveAspectRatio="none" style={{ position: 'absolute', inset: 'auto 0 0', width: '100%', height: '82%', opacity: 0.72 }}>
+    <path d="M0 185 L0 160 L18 160 L18 145 L32 145 L32 120 L42 120 L42 185 Z M50 185 L50 138 L70 138 L70 112 L88 112 L88 185 Z M96 185 L96 128 L112 128 L112 90 L126 90 L126 185 Z M138 185 L138 115 L160 115 L160 60 L176 115 L196 115 L196 185 Z M207 185 L207 92 L226 92 L226 55 L240 55 L240 185 Z M252 185 L252 118 L272 118 L272 86 L296 86 L296 185 Z M308 185 L308 78 L320 78 L320 20 L330 78 L344 78 L344 185 Z M356 185 L356 104 L376 104 L376 74 L394 74 L394 185 Z M402 185 L402 135 L420 135 L420 185 Z" fill="#4a9fbd" />
+    <path d="M0 185 H420 V210 H0 Z" fill="#3489a8" />
+  </svg>
+);
+
+const PanelHeader = ({ title, badge = 'Estimated' }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+    <h2 style={{ margin: 0, fontSize: '1.05rem', color: '#071a33' }}>{title}</h2>
+    {badge && <span style={{ border: '1px solid #dce8f3', borderRadius: 999, padding: '0.25rem 0.55rem', color: '#45627f', background: '#f6faff', fontSize: '0.72rem', fontWeight: 900 }}>{badge}</span>}
+  </div>
+);
+
+const SectionLabel = ({ children }) => (
+  <p style={{ margin: 0, color: '#1f7cff', fontSize: '0.76rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{children}</p>
+);
+
+const splitProjectDetails = (items = []) => {
+  const facts = [];
+  const highlights = [];
+  items.forEach((item) => {
+    if (/^(company|location|capacity|investment|timeline|status):/i.test(item)) {
+      facts.push(item);
+    } else if (!/^details:?$/i.test(item)) {
+      highlights.push(item);
+    }
+  });
+  return {
+    facts: facts.length ? facts : items.slice(0, 6),
+    highlights: highlights.length ? highlights : items.slice(6)
+  };
+};
+
+const DefinitionList = ({ items }) => (
+  <dl style={{ display: 'grid', gridTemplateColumns: '120px minmax(0, 1fr)', columnGap: '1rem', rowGap: '0.8rem', margin: 0, color: '#344b65', fontSize: '0.96rem' }}>
+    {(items?.length ? items : ['No reviewed details are available yet.']).map((item) => {
+      const [rawLabel, ...rest] = String(item).split(':');
+      const hasLabel = rest.length > 0;
+      return (
+        <React.Fragment key={item}>
+          <dt style={{ fontWeight: 900, color: '#466480' }}>{hasLabel ? rawLabel.trim() : 'Details'}</dt>
+          <dd style={{ margin: 0, fontWeight: 650, lineHeight: 1.55 }}>{hasLabel ? rest.join(':').trim() : item}</dd>
+        </React.Fragment>
+      );
+    })}
+  </dl>
+);
+
+const DetailList = ({ items, columns = false }) => (
+  <ul style={{ margin: 0, paddingLeft: '1.1rem', columns: columns ? 2 : 1, columnGap: '2rem', color: '#344b65', lineHeight: 1.8, fontSize: '0.96rem', fontWeight: 650 }}>
+    {(items?.length ? items : ['No reviewed details are available yet.']).map((detail) => <li key={detail}>{detail}</li>)}
+  </ul>
+);
+
+const DetailBlock = ({ title, items }) => (
+  <section style={{ border: '1px solid #dce8f3', borderRadius: 10, background: '#f8fbff', padding: '0.9rem' }}>
+    <h3 style={{ margin: '0 0 0.55rem', fontSize: '0.9rem', color: '#173251' }}>{title}</h3>
+    <DetailList items={items} />
+  </section>
+);
+
+const MiniMetric = ({ title, value, color }) => (
+  <article style={{ border: '1px solid #dce8f3', borderRadius: 10, background: '#fff', padding: '1rem' }}>
+    <p style={{ margin: 0, color, fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase' }}>{title}</p>
+    <strong style={{ display: 'block', marginTop: 6, color: '#071a33', fontSize: '1.4rem', lineHeight: 1.15 }}>{value || pendingText}</strong>
+    <div style={{ height: 48, marginTop: '0.75rem', background: `linear-gradient(180deg, ${color}22, ${color}05)`, borderBottom: `3px solid ${color}`, borderRadius: 8 }} />
+  </article>
+);
+
+const navIcon = (item) => ({
+  Overview: 'OV',
+  Infrastructure: 'IN',
+  Workforce: 'WF',
+  Environment: 'EV',
+  Energy: 'EN',
+  Projects: 'PR',
+  Compare: 'CP',
+  Reports: 'RP'
+}[item] || '-');
+
+const Bar = ({ label, value, max, color }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 70px', alignItems: 'center', gap: '0.7rem', color: '#4d637d', fontSize: '0.8rem', fontWeight: 800 }}>
+    <span>{label}</span>
+    <div style={{ height: 10, borderRadius: 99, background: '#eef4fa', overflow: 'hidden' }}>
+      <div style={{ width: `${Math.max(6, Math.min(100, (value / max) * 100))}%`, height: '100%', borderRadius: 99, background: color }} />
+    </div>
+    <span style={{ textAlign: 'right' }}>{value.toLocaleString('en-US')}</span>
+  </div>
+);
+
+export default AIEconomyImpactCalculator;

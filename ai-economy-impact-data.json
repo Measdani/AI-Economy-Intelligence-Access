@@ -1,0 +1,1826 @@
+[
+  {
+    "state": "Alabama",
+    "abbreviation": "AL",
+    "totalDataCenters": {
+      "value": 40,
+      "status": "verified",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/alabama",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Baxtel lists the Alabama data center market as having 40 data centers operated by 19 providers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Alabama projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Alabama projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    },
+    "providerCount": {
+      "value": 19,
+      "status": "verified",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/alabama",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Provider count from Baxtel's Alabama data center market facts."
+    },
+    "largestKnownFacility": {
+      "value": "Google Bridgeport",
+      "status": "verified",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/alabama",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Baxtel lists Google Bridgeport as the largest Alabama facility."
+    },
+    "largestKnownFacilityMW": {
+      "value": 50,
+      "status": "verified",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/alabama",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Baxtel lists Google Bridgeport at 50 MW."
+    }
+  },
+  {
+    "state": "Alaska",
+    "abbreviation": "AK",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Alaska total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Alaska projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Alaska projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Arizona",
+    "abbreviation": "AZ",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Arizona total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Arizona projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Arizona projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Arkansas",
+    "abbreviation": "AR",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Arkansas total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Arkansas projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Arkansas projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "California",
+    "abbreviation": "CA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for California total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned California projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction California projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Colorado",
+    "abbreviation": "CO",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Colorado total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Colorado projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Colorado projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Connecticut",
+    "abbreviation": "CT",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Connecticut total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Connecticut projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Connecticut projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Delaware",
+    "abbreviation": "DE",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Delaware total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Delaware projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Delaware projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Florida",
+    "abbreviation": "FL",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Florida total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Florida projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Florida projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Georgia",
+    "abbreviation": "GA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Georgia total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Georgia projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Georgia projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Hawaii",
+    "abbreviation": "HI",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Hawaii total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Hawaii projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Hawaii projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Idaho",
+    "abbreviation": "ID",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Idaho total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Idaho projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Idaho projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Illinois",
+    "abbreviation": "IL",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Illinois total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Illinois projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Illinois projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Indiana",
+    "abbreviation": "IN",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Indiana total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Indiana projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Indiana projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Iowa",
+    "abbreviation": "IA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Iowa total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Iowa projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Iowa projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Kansas",
+    "abbreviation": "KS",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Kansas total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Kansas projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Kansas projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Kentucky",
+    "abbreviation": "KY",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Kentucky total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Kentucky projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Kentucky projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Louisiana",
+    "abbreviation": "LA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Louisiana total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Louisiana projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Louisiana projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Maine",
+    "abbreviation": "ME",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Maine total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Maine projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Maine projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Maryland",
+    "abbreviation": "MD",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Maryland total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Maryland projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Maryland projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Massachusetts",
+    "abbreviation": "MA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Massachusetts total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Massachusetts projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Massachusetts projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Michigan",
+    "abbreviation": "MI",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Michigan total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Michigan projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Michigan projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Minnesota",
+    "abbreviation": "MN",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Minnesota total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Minnesota projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Minnesota projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Mississippi",
+    "abbreviation": "MS",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Mississippi total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Mississippi projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Mississippi projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Missouri",
+    "abbreviation": "MO",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Missouri total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Missouri projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Missouri projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Montana",
+    "abbreviation": "MT",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Montana total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Montana projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Montana projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Nebraska",
+    "abbreviation": "NE",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Nebraska total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Nebraska projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Nebraska projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Nevada",
+    "abbreviation": "NV",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Nevada total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Nevada projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Nevada projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "New Hampshire",
+    "abbreviation": "NH",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for New Hampshire total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned New Hampshire projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction New Hampshire projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "New Jersey",
+    "abbreviation": "NJ",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for New Jersey total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned New Jersey projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction New Jersey projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "New Mexico",
+    "abbreviation": "NM",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for New Mexico total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned New Mexico projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction New Mexico projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "New York",
+    "abbreviation": "NY",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for New York total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned New York projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction New York projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "North Carolina",
+    "abbreviation": "NC",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for North Carolina total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned North Carolina projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction North Carolina projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "North Dakota",
+    "abbreviation": "ND",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for North Dakota total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned North Dakota projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction North Dakota projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Ohio",
+    "abbreviation": "OH",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Ohio total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Ohio projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Ohio projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Oklahoma",
+    "abbreviation": "OK",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Oklahoma total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Oklahoma projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Oklahoma projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Oregon",
+    "abbreviation": "OR",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Oregon total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Oregon projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Oregon projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Pennsylvania",
+    "abbreviation": "PA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Pennsylvania total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Pennsylvania projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Pennsylvania projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Rhode Island",
+    "abbreviation": "RI",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Rhode Island total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Rhode Island projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Rhode Island projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "South Carolina",
+    "abbreviation": "SC",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for South Carolina total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned South Carolina projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction South Carolina projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "South Dakota",
+    "abbreviation": "SD",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for South Dakota total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned South Dakota projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction South Dakota projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Tennessee",
+    "abbreviation": "TN",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Tennessee total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Tennessee projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Tennessee projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Texas",
+    "abbreviation": "TX",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Texas total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Texas projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Texas projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Utah",
+    "abbreviation": "UT",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Utah total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Utah projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Utah projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Vermont",
+    "abbreviation": "VT",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Vermont total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Vermont projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Vermont projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Virginia",
+    "abbreviation": "VA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Virginia total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Virginia projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Virginia projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Washington",
+    "abbreviation": "WA",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Washington total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Washington projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Washington projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "West Virginia",
+    "abbreviation": "WV",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for West Virginia total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned West Virginia projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction West Virginia projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Wisconsin",
+    "abbreviation": "WI",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Wisconsin total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Wisconsin projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Wisconsin projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  },
+  {
+    "state": "Wyoming",
+    "abbreviation": "WY",
+    "totalDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Baxtel",
+      "sourceUrl": "https://baxtel.com/data-center/",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Baxtel import for Wyoming total listed data centers."
+    },
+    "totalPlannedDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for planned Wyoming projects."
+    },
+    "totalUnderConstructionDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pending Cleanview import for under-construction Wyoming projects."
+    },
+    "totalPipelineDataCenters": {
+      "value": null,
+      "status": "pending",
+      "sourceName": "Cleanview",
+      "sourceUrl": "https://cleanview.co/public/data-centers/us",
+      "lastUpdated": "2026-05-14",
+      "methodologyNote": "Pipeline equals planned plus under construction after Cleanview import."
+    }
+  }
+]
